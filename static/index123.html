@@ -1,0 +1,4295 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Maps • Population • Competitors</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <style>
+      /* Header Navigation Styles */
+      .top-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        z-index: 2000;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+      }
+
+      .header-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: var(--text);
+      }
+
+      .header-logo-icon {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+        color: white;
+      }
+
+      .header-logo-text {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .header-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .nav-link {
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .nav-link:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+      }
+
+      .nav-link.active {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .user-menu {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 13px;
+        color: white;
+      }
+
+      .user-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .header-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .header-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .header-btn.primary {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        color: #07102a;
+        border: none;
+      }
+
+      .header-btn.primary:hover {
+        opacity: 0.9;
+      }
+
+      /* Adjust main content to account for fixed header */
+      .outer {
+        margin-top: 60px;
+        height: calc(100vh - 60px);
+      }
+
+      /* TTS Button Styles */
+      .tts-btn {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        transition: all 0.2s;
+      }
+
+      .tts-btn:hover:not(:disabled) {
+        background: rgba(96, 165, 250, 0.1);
+        border-color: var(--accent);
+      }
+
+      .tts-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* Sound Wave Animation */
+      .sound-wave {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        height: 16px;
+      }
+
+      .sound-wave .bar {
+        width: 3px;
+        background: var(--accent);
+        border-radius: 2px;
+        animation: wave 0.8s ease-in-out infinite;
+      }
+
+      .sound-wave .bar:nth-child(1) {
+        animation-delay: 0s;
+        height: 8px;
+      }
+
+      .sound-wave .bar:nth-child(2) {
+        animation-delay: 0.1s;
+        height: 14px;
+      }
+
+      .sound-wave .bar:nth-child(3) {
+        animation-delay: 0.2s;
+        height: 10px;
+      }
+
+      .sound-wave .bar:nth-child(4) {
+        animation-delay: 0.3s;
+        height: 14px;
+      }
+
+      .sound-wave .bar:nth-child(5) {
+        animation-delay: 0.4s;
+        height: 8px;
+      }
+
+      @keyframes wave {
+        0%,
+        100% {
+          transform: scaleY(0.5);
+        }
+        50% {
+          transform: scaleY(1);
+        }
+      }
+
+      /* Loading Spinner */
+      .tts-spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(96, 165, 250, 0.3);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      #panelFoot .ft-root {
+        padding: 12px;
+        font-family: inherit;
+        color: inherit;
+      }
+      #panelFoot .ft-venue-title {
+        font-weight: 700;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      #panelFoot .ft-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      #panelFoot .ft-tab {
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: transparent;
+        cursor: pointer;
+        color: inherit;
+        font-size: 13px;
+      }
+      #panelFoot .ft-tab.active {
+        background: linear-gradient(
+          90deg,
+          var(--accent, #7dd3fc),
+          var(--accent-2, #60a5fa)
+        );
+        color: #07102a;
+        border: none;
+      }
+      #panelFoot .ft-table.card {
+        width: 100%;
+        overflow: auto;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        padding: 10px;
+        background: var(--card-bg, rgba(255, 255, 255, 0.02));
+      }
+      #panelFoot table.ft {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      #panelFoot table.ft th,
+      #panelFoot table.ft td {
+        padding: 6px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        white-space: nowrap;
+      }
+      #panelFoot table.ft th.hour {
+        font-weight: 600;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      #panelFoot .ft-legend {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .ft-cell {
+        color: #07102a;
+        font-weight: 600;
+        border-radius: 4px;
+        padding: 4px;
+        display: inline-block;
+        min-width: 28px;
+      }
+      #panelFoot .ft-loading {
+        padding: 18px;
+        text-align: center;
+        color: var(--muted);
+      }
+      #panelFoot .ft-error {
+        padding: 12px;
+        color: var(--danger, #ff7b7b);
+        text-align: center;
+      }
+      #panelFoot .ft-table {
+        width: 100%;
+        overflow-x: auto;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.02);
+        padding: 0;
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+      }
+
+      #panelFoot table.ft {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        color: #d4d8e3;
+        text-align: center;
+      }
+
+      #panelFoot table.ft th,
+      #panelFoot table.ft td {
+        padding: 6px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        min-width: 28px;
+        height: 24px;
+      }
+
+      #panelFoot table.ft th {
+        background: rgba(255, 255, 255, 0.05);
+        font-weight: 600;
+        color: #9aa0a6;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+
+      #panelFoot table.ft th:first-child {
+        position: sticky;
+        left: 0;
+        background: rgba(255, 255, 255, 0.05);
+        z-index: 3;
+      }
+
+      #panelFoot table.ft td:first-child {
+        text-align: left;
+        font-weight: 600;
+        color: #cfd5e2;
+        background: rgba(255, 255, 255, 0.05);
+        position: sticky;
+        left: 0;
+        z-index: 1;
+      }
+
+      #panelFoot .ft-cell {
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+        border-radius: 4px;
+        color: #dbe2f0;
+        font-weight: 500;
+      }
+
+      /* Gradient from dark (low) → bright (high) */
+      #panelFoot .ft-cell[data-val="0"] {
+        background-color: rgba(255, 255, 255, 0.02);
+        color: #555;
+      }
+      #panelFoot .ft-cell[data-level="low"] {
+        background-color: rgba(80, 100, 150, 0.3);
+      }
+      #panelFoot .ft-cell[data-level="mid"] {
+        background-color: rgba(70, 120, 200, 0.5);
+      }
+      #panelFoot .ft-cell[data-level="high"] {
+        background-color: rgba(90, 160, 255, 0.8);
+        color: #fff;
+      }
+
+      /* subtle hover */
+      #panelFoot table.ft td:hover .ft-cell {
+        outline: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      #chat h1,
+      #chat h2,
+      #chat h3 {
+        font-weight: 800;
+        margin: 0 0 8px 0;
+      }
+      #chat strong {
+        font-weight: 800;
+      }
+      :root {
+        --bg: #0b1020;
+        --panel: #0f172a;
+        --card: #111827;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --border: #1f2937;
+        --accent: #60a5fa;
+        --accent-2: #22d3ee;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: Inter, system-ui, Arial;
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+      }
+      .outer {
+        display: grid;
+        grid-template-columns: 72px 1fr 420px;
+        height: 100vh;
+        gap: 12px;
+        padding: 12px;
+        box-sizing: border-box;
+      }
+      .rail {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+        padding-top: 12px;
+      }
+      .rail button {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .rail button.active {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        color: #07102a;
+      }
+      /* Updated leftPanel with transparent background */
+      .leftPanel {
+        position: absolute;
+        left: 100px;
+        top: 72px;
+        width: 900px;
+        max-height: calc(100vh - 84px);
+        overflow: auto;
+        z-index: 1100;
+        display: none;
+        background: rgba(17, 24, 39, 0.85); /* Semi-transparent background */
+        backdrop-filter: blur(10px); /* Blur effect for glass morphism */
+        -webkit-backdrop-filter: blur(10px); /* Safari support */
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .leftPanel.open {
+        display: block;
+      }
+      /* Updated card with more transparent background */
+      .card {
+        background: rgba(17, 24, 39, 0.35);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 8px 20px rgba(2, 6, 23, 0.35);
+        color: var(--text);
+      }
+      #map {
+        width: 100%;
+        height: 100%;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(2, 6, 23, 0.25);
+        overflow: hidden;
+      }
+      .right {
+        overflow: auto;
+      }
+      .chat {
+        flex: 1;
+        overflow: auto;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        padding: 12px;
+        min-height: 200px;
+      }
+      .comp-list {
+        max-height: 360px;
+        overflow: auto;
+        margin-top: 8px;
+        display: grid;
+        gap: 8px;
+      }
+      .comp-item {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 8px;
+        border-radius: 8px;
+        background: #071227;
+        border: 1px solid var(--border);
+        cursor: pointer;
+      }
+      /* larger competitor image */
+      .comp-item img {
+        width: 120px;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 8px;
+        background: #081018;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        color: var(--text);
+        table-layout: fixed;
+      }
+      th,
+      td {
+        padding: 6px 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      th {
+        color: var(--muted);
+        text-transform: uppercase;
+        font-weight: 600;
+        font-size: 11px;
+      }
+      .btn {
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .btn.primary {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        color: #07102a;
+        border: none;
+      }
+      @media (max-width: 1100px) {
+        .outer {
+          grid-template-columns: 64px 1fr;
+        }
+        .leftPanel {
+          left: 80px;
+          width: 420px;
+        }
+        .right {
+          display: none;
+        }
+        .header-nav {
+          display: none;
+        }
+        .user-name {
+          display: none;
+        }
+      }
+      #mapsErrorOverlay {
+        position: fixed;
+        left: 12px;
+        top: 72px;
+        z-index: 99999;
+        background: rgba(18, 22, 33, 0.98);
+        color: #fff;
+        border-radius: 8px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        display: none;
+        max-width: 540px;
+      }
+      .label {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .value {
+        font-size: 20px;
+        font-weight: 700;
+        margin-top: 6px;
+      }
+      .sub {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      /* Chart sizes tuned down a bit so both fit without vertical scroll on typical screens */
+      .chart-age {
+        height: 200px !important;
+      }
+      .chart-pie {
+        height: 200px !important;
+        width: 140px !important;
+      }
+      /* Updated table container with better visibility */
+      #tblBodyContainer {
+        max-height: 280px; /* Increased from 160px */
+        overflow: auto;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 4px;
+      }
+
+      #tblBodyContainer table {
+        width: 100%;
+        min-width: 100%;
+      }
+
+      /* Hide user profile section from right panel */
+      #userProfile {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Header Navigation -->
+    <header class="top-header">
+      <div class="header-left">
+        <a href="dashboard.html" class="header-logo">
+          <div class="header-logo-icon">BA</div>
+          <span class="header-logo-text">BizAnalyzer</span>
+        </a>
+        <nav class="header-nav">
+          <a href="dashboard.html" class="nav-link">
+            <span>🏠</span>
+            <span>Home</span>
+          </a>
+          <a href="index123.html" class="nav-link active">
+            <span>📍</span>
+            <span>Analysis</span>
+          </a>
+        </nav>
+      </div>
+      <div class="header-right">
+        <div class="user-menu" id="headerUserMenu" style="display: none">
+          <div class="user-avatar" id="headerUserAvatar"></div>
+          <div class="user-name" id="headerUserName"></div>
+        </div>
+        <button class="header-btn" id="headerLoginBtn" style="display: none">
+          Log In
+        </button>
+        <button class="header-btn" id="headerLogoutBtn" style="display: none">
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <div id="mapsErrorOverlay"></div>
+
+    <div class="outer">
+      <div class="rail">
+        <button id="btnPopulation" title="Population">P</button>
+        <button id="btnCompetitors" title="Competitors">C</button>
+        <button id="btnFoot" title="Foot traffic">F</button>
+        <button id="btnR" title="Records">R</button>
+      </div>
+
+      <div id="mapContainer" style="position: relative">
+        <div id="map"></div>
+      </div>
+
+      <!-- RIGHT chat -->
+      <section class="right">
+        <div class="card">
+          <div class="label" style="margin-bottom: 6px">Text Generation</div>
+          <div
+            id="chat"
+            class="chat"
+            aria-live="polite"
+            aria-label="Conversation"
+          ></div>
+          <div class="compose" style="margin-top: 10px">
+            <div style="display: flex; gap: 8px">
+              <button id="sendBtn" class="btn primary" style="width: 100%">
+                Generate Analysis
+              </button>
+            </div>
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                margin-top: 8px;
+              "
+            >
+              <button
+                class="btn"
+                id="btnSaveTarget"
+                title="Save target location"
+              >
+                Save Target Location
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- LEFT PANELS (hidden by default) -->
+    <div id="panelPopulation" class="leftPanel card" aria-hidden="true">
+      <div class="card" style="position: sticky; top: 76px">
+        <div class="label">Barangays</div>
+        <div
+          id="brgyList"
+          style="display: grid; gap: 8px; max-height: 240px; overflow: auto"
+        ></div>
+
+        <div
+          class="grid stats"
+          style="
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+          "
+        >
+          <div class="card">
+            <div class="label">Total Population</div>
+            <div class="value" id="statTotal">—</div>
+            <div class="sub">Aggregated from selected</div>
+          </div>
+          <div class="card">
+            <div class="label">Male</div>
+            <div class="value" id="statMale">—</div>
+            <div class="sub" id="statMalePct">—</div>
+          </div>
+          <div class="card">
+            <div class="label">Female</div>
+            <div class="value" id="statFemale">—</div>
+            <div class="sub" id="statFemalePct">—</div>
+          </div>
+        </div>
+
+        <div
+          class="charts"
+          style="
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+          "
+        >
+          <div class="card" style="flex: 1">
+            <div class="label" style="margin-bottom: 8px">
+              Age Groups by Sex
+            </div>
+            <div style="height: 200px">
+              <canvas id="barAge" class="chart-age"></canvas>
+            </div>
+          </div>
+          <div class="card" style="width: 160px; min-width: 160px">
+            <div class="label" style="margin-bottom: 8px">Gender Split</div>
+            <div
+              style="
+                height: 200px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <canvas id="pieGender" class="chart-pie"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 12px">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 8px;
+            "
+          >
+            <div class="label">Selected Barangays — Breakdown</div>
+            <div style="display: flex; gap: 8px">
+              <button class="btn" id="exportCsv">Export Selected CSV</button>
+              <button class="btn" id="exportCsvTotals">
+                Export Totals CSV
+              </button>
+            </div>
+          </div>
+          <div id="tblBodyContainer">
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align: left">Barangay</th>
+                  <th>Total</th>
+                  <th>Male</th>
+                  <th>Female</th>
+                  <th>Children</th>
+                  <th>Teens</th>
+                  <th>Young Adults</th>
+                  <th>Adults</th>
+                  <th>Seniors</th>
+                </tr>
+              </thead>
+              <tbody id="tblBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 12px;
+          "
+        >
+          <button class="btn primary" id="btnGeneratePreview">
+            Generate AI Preview
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="panelCompetitors" class="leftPanel card" aria-hidden="true">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <div style="font-weight: 700">Competitors</div>
+        <div style="color: var(--muted)" id="compCount">0</div>
+      </div>
+      <div class="comp-list" id="compList"></div>
+      <div style="margin-top: 8px">
+        <button id="btnCenterAll" class="btn" style="width: 100%">
+          Fit all on map
+        </button>
+      </div>
+    </div>
+
+    <div id="panelFoot" class="leftPanel card" aria-hidden="true">
+      <div style="font-weight: 700">Foot traffic (empty)</div>
+      <div style="color: var(--muted); margin-top: 8px">
+        Placeholder — no data yet.
+      </div>
+    </div>
+
+    <!-- Saved Targets / Records panel -->
+    <div id="panelRecords" class="leftPanel card" aria-hidden="true">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <div style="font-weight: 700">Saved Targets</div>
+        <div id="recordsCount" style="color: var(--muted)">—</div>
+      </div>
+
+      <div
+        id="recordsList"
+        style="
+          margin-top: 8px;
+          max-height: 320px;
+          overflow: auto;
+          display: block;
+        "
+      ></div>
+
+      <div
+        id="recordDetails"
+        style="margin-top: 12px; color: var(--muted)"
+      ></div>
+
+      <div
+        style="
+          display: flex;
+          gap: 8px;
+          justify-content: flex-end;
+          margin-top: 12px;
+        "
+      >
+        <button id="btnRefreshRecords" class="btn">Refresh</button>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div
+      id="modalBackdrop"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.55);
+        align-items: center;
+        justify-content: center;
+        z-index: 1500;
+      "
+    >
+      <div
+        style="
+          width: 460px;
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 14px;
+        "
+      >
+        <h3 style="margin: 0 0 6px 0">Submit Business Location</h3>
+        <div id="selectedInfo" style="color: var(--muted); margin-bottom: 8px">
+          Select a location on the map.
+        </div>
+        <label>Latitude</label
+        ><input
+          id="lat"
+          readonly
+          style="
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            background: #081225;
+            border: 1px solid var(--border);
+            color: var(--text);
+          "
+        />
+        <label style="margin-top: 8px">Longitude</label
+        ><input
+          id="lng"
+          readonly
+          style="
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            background: #081225;
+            border: 1px solid var(--border);
+            color: var(--text);
+          "
+        />
+        <label style="margin-top: 8px">Business Type</label>
+        <select
+          id="businessType"
+          style="
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            background: #081225;
+            border: 1px solid var(--border);
+            color: var(--text);
+          "
+        >
+          <option value="">-- choose type --</option>
+          <option>restaurant</option>
+          <option>cafe</option>
+          <option>store</option>
+          <option>other</option>
+          <option>store</option>
+          <option>finance</option>
+          <option>food</option>
+          <option>florist</option>
+          <option>atm</option>
+          <option>electronics_store</option>
+          <option>bank</option>
+          <option>health</option>
+          <option>drugstore</option>
+          <option>meal_takeaway</option>
+          <option>supermarket</option>
+          <option>storage</option>
+          <option>grocery_or_supermarket</option>
+          <option>church</option>
+          <option>place_of_worship</option>
+        </select>
+        <label style="margin-top: 8px">Description</label>
+        <textarea
+          id="description"
+          rows="3"
+          style="
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            background: #081225;
+            border: 1px solid var(--border);
+            color: var(--text);
+          "
+        ></textarea>
+
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 10px;
+          "
+        >
+          <button id="cancelBtn" class="btn">Cancel</button>
+          <button id="submitBtn" class="btn primary">Submit</button>
+        </div>
+        <div id="status" style="color: var(--muted); margin-top: 8px"></div>
+      </div>
+    </div>
+
+    <!-- Google Maps JS - replace the placeholder key with your real key -->
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA63takvoE_a_hMfpCP9wRbxVcEWaDqhXY&libraries=places,geometry&callback=initMap"
+      async
+      defer
+    ></script>
+
+    <script>
+      /***********************
+       * Header Authentication UI
+       ***********************/
+      (async function initHeader() {
+        const headerUserMenu = document.getElementById("headerUserMenu");
+        const headerUserAvatar = document.getElementById("headerUserAvatar");
+        const headerUserName = document.getElementById("headerUserName");
+        const headerLoginBtn = document.getElementById("headerLoginBtn");
+        const headerLogoutBtn = document.getElementById("headerLogoutBtn");
+
+        async function fetchCurrentUser() {
+          try {
+            const res = await fetch("/current_user", {
+              credentials: "same-origin",
+            });
+            if (!res.ok) return null;
+            const data = await res.json().catch(() => null);
+            if (!data || !data.ok) return null;
+            return data.user || null;
+          } catch (e) {
+            console.warn("Failed to fetch current_user", e);
+            return null;
+          }
+        }
+
+        // Login button handler
+        if (headerLoginBtn) {
+          headerLoginBtn.addEventListener("click", () => {
+            window.location.href = "login.html";
+          });
+        }
+
+        // Logout button handler
+        if (headerLogoutBtn) {
+          headerLogoutBtn.addEventListener("click", async () => {
+            try {
+              const r = await fetch("/logout", { method: "POST" });
+              if (r.ok) {
+                window.location.href = "login.html";
+              } else {
+                alert("Logout failed");
+              }
+            } catch (e) {
+              console.error("Logout error", e);
+              alert("Logout failed — see console.");
+            }
+          });
+        }
+
+        // Fetch and display user info
+        const user = await fetchCurrentUser();
+        if (user) {
+          const initials = (user.full_name || user.email)
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+
+          headerUserAvatar.textContent = initials;
+          headerUserName.textContent =
+            user.full_name?.split(" ")[0] || user.email || "User";
+          headerUserMenu.style.display = "flex";
+          headerLogoutBtn.style.display = "block";
+          if (headerLoginBtn) headerLoginBtn.style.display = "none";
+        } else {
+          if (headerLoginBtn) headerLoginBtn.style.display = "block";
+          if (headerLogoutBtn) headerLogoutBtn.style.display = "none";
+          if (headerUserMenu) headerUserMenu.style.display = "none";
+        }
+      })();
+
+      /***********************
+       * UI & panels - UPDATED WITH TOGGLE FUNCTIONALITY
+       ***********************/
+
+      const btnP = document.getElementById("btnPopulation");
+      const btnC = document.getElementById("btnCompetitors");
+      const btnF = document.getElementById("btnFoot");
+      const btnR = document.getElementById("btnR");
+      const panelP = document.getElementById("panelPopulation");
+      const panelC = document.getElementById("panelCompetitors");
+      const panelF = document.getElementById("panelFoot");
+      const panelRecords = document.getElementById("panelRecords");
+
+      function showOverlayError(msg) {
+        const el = document.getElementById("mapsErrorOverlay");
+        el.style.display = "block";
+        el.innerHTML = `<strong>Google Maps:</strong><div style="margin-top:6px;color:#ddd">${msg}</div>`;
+      }
+      window.gm_authFailure = function () {
+        showOverlayError(
+          "Authentication/authorization failure — check API key, enabled APIs and billing."
+        );
+        console.error("gm_authFailure");
+      };
+
+      function hideAllPanels() {
+        btnP.classList.remove("active");
+        btnC.classList.remove("active");
+        btnF.classList.remove("active");
+        btnR.classList.remove("active");
+
+        panelP.classList.remove("open");
+        panelP.style.display = "none";
+        panelP.setAttribute("aria-hidden", "true");
+
+        panelC.classList.remove("open");
+        panelC.style.display = "none";
+        panelC.setAttribute("aria-hidden", "true");
+
+        panelF.classList.remove("open");
+        panelF.style.display = "none";
+        panelF.setAttribute("aria-hidden", "true");
+
+        if (panelRecords) {
+          panelRecords.classList.remove("open");
+          panelRecords.style.display = "none";
+          panelRecords.setAttribute("aria-hidden", "true");
+        }
+      }
+
+      // UPDATED: Toggle behavior for Population button
+      btnP.addEventListener("click", async () => {
+        const isCurrentlyActive = btnP.classList.contains("active");
+
+        if (isCurrentlyActive) {
+          // If already active, just hide it
+          hideAllPanels();
+        } else {
+          // Otherwise, show this panel
+          hideAllPanels();
+          btnP.classList.add("active");
+          panelP.classList.add("open");
+          panelP.style.display = "block";
+          panelP.setAttribute("aria-hidden", "false");
+          await loadBarangaysIntoPanel();
+        }
+      });
+
+      // UPDATED: Toggle behavior for Competitors button
+      btnC.addEventListener("click", () => {
+        const isCurrentlyActive = btnC.classList.contains("active");
+
+        if (isCurrentlyActive) {
+          hideAllPanels();
+        } else {
+          hideAllPanels();
+          btnC.classList.add("active");
+          panelC.classList.add("open");
+          panelC.style.display = "block";
+          panelC.setAttribute("aria-hidden", "false");
+        }
+      });
+
+      // UPDATED: Toggle behavior for Foot Traffic button
+      btnF.addEventListener("click", () => {
+        const isCurrentlyActive = btnF.classList.contains("active");
+
+        if (isCurrentlyActive) {
+          hideAllPanels();
+        } else {
+          hideAllPanels();
+          btnF.classList.add("active");
+          panelF.classList.add("open");
+          panelF.style.display = "block";
+          panelF.setAttribute("aria-hidden", "false");
+        }
+      });
+
+      // UPDATED: Toggle behavior for
+      // UPDATED: Toggle behavior for Records button
+      if (btnR) {
+        btnR.addEventListener("click", async () => {
+          const isCurrentlyActive = btnR.classList.contains("active");
+
+          if (isCurrentlyActive) {
+            hideAllPanels();
+          } else {
+            hideAllPanels();
+            btnR.classList.add("active");
+            if (panelRecords) {
+              panelRecords.classList.add("open");
+              panelRecords.style.display = "block";
+              panelRecords.setAttribute("aria-hidden", "false");
+              await loadRecords();
+            }
+          }
+        });
+      }
+
+      // hidden by default
+      hideAllPanels();
+
+      // --- Saved Targets (Records) panel logic ---
+      const recordsList = document.getElementById("recordsList");
+      const recordDetails = document.getElementById("recordDetails");
+      const recordsCount = document.getElementById("recordsCount");
+      const btnRefreshRecords = document.getElementById("btnRefreshRecords");
+
+      async function fetchJsonWithAuth(url) {
+        try {
+          const res = await fetch(url, { credentials: "same-origin" }); // use 'include' if cross-origin
+          if (res.status === 401) return { auth: false };
+          const j = await res.json().catch(() => null);
+          return { auth: true, ok: res.ok, status: res.status, json: j };
+        } catch (err) {
+          console.error("fetchJsonWithAuth error", err);
+          return { auth: true, ok: false, error: err };
+        }
+      }
+
+      async function loadRecords() {
+        recordsList.innerHTML =
+          '<div style="color:var(--muted); padding:12px">Loading saved targets…</div>';
+        recordDetails.innerHTML = "";
+        const r = await fetchJsonWithAuth("/targets");
+        if (!r.auth) {
+          alert("You must be logged in to view saved targets.");
+          window.location.href = "login.html";
+          return;
+        }
+        if (!r.ok) {
+          recordsList.innerHTML = `<div style="color:var(--danger); padding:12px">Failed to load: ${
+            r.status || ""
+          }</div>`;
+          return;
+        }
+        const data = r.json || {};
+        const targets = data.targets || [];
+        recordsCount.textContent = targets.length;
+        if (!targets.length) {
+          recordsList.innerHTML =
+            '<div style="color:var(--muted); padding:12px">No saved targets yet.</div>';
+          return;
+        }
+
+        // Build list
+        recordsList.innerHTML = "";
+        targets.forEach((t) => {
+          const el = document.createElement("div");
+          el.className = "card";
+          el.style.margin = "8px 0";
+          el.style.cursor = "pointer";
+          el.style.padding = "8px";
+          el.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+        <div style="flex:1;">
+          <div style="font-weight:700; margin-bottom:6px">${escapeHtml(
+            t.name || t.business_type || "Target"
+          )}</div>
+          <div style="color:var(--muted); font-size:12px">${escapeHtml(
+            t.description || ""
+          )}</div>
+          <div style="color:var(--muted); font-size:12px; margin-top:6px">${Number(
+            t.latitude
+          ).toFixed(6)}, ${Number(t.longitude).toFixed(6)}</div>
+        </div>
+        <div style="text-align:right; min-width:86px;">
+          <div style="font-weight:700">${t.competitor_count || 0} comps</div>
+          <div style="color:var(--muted); font-size:12px">${new Date(
+            t.created_at
+          ).toLocaleString()}</div>
+        </div>
+      </div>
+    `;
+          el.addEventListener("click", () => {
+            // highlight selection briefly
+            Array.from(recordsList.children).forEach(
+              (c) => (c.style.boxShadow = "none")
+            );
+            el.style.boxShadow = "0 6px 18px rgba(0,0,0,0.5)";
+            loadTargetDetails(t.id);
+          });
+          recordsList.appendChild(el);
+        });
+      }
+
+      async function loadTargetDetails(targetId) {
+        recordDetails.innerHTML =
+          '<div style="color:var(--muted); padding:8px">Loading details…</div>';
+        const r = await fetchJsonWithAuth(
+          `/target/${encodeURIComponent(targetId)}`
+        );
+        if (!r.auth) {
+          alert("You must be logged in to view saved targets.");
+          window.location.href = "login.html";
+          return;
+        }
+        if (!r.ok) {
+          recordDetails.innerHTML = `<div style="color:var(--danger); padding:8px">Failed to load target: ${
+            r.status || ""
+          }</div>`;
+          return;
+        }
+        const payload = r.json || {};
+        const target = payload.target || {};
+        const comps = payload.competitors || [];
+        const fts = payload.foot_traffic || [];
+
+        // Try to read ai_analysis either from normalized ai_analysis table (if you added it)
+        // or from target.data.ai_analysis (data is JSONB stored in targets.data)
+        let aiText = null;
+        try {
+          if (target.data && target.data.ai_analysis) {
+            aiText = target.data.ai_analysis;
+            if (Array.isArray(aiText)) aiText = aiText.join("\n\n");
+          }
+        } catch (e) {}
+
+        // Render details
+        let html = `<div style="font-weight:700">${escapeHtml(
+          target.name || target.business_type || "Target"
+        )}</div>`;
+        html += `<div style="color:var(--muted); margin-top:6px">${escapeHtml(
+          target.description || ""
+        )}</div>`;
+        html += `<div style="margin-top:8px; color:var(--muted)">Location: ${Number(
+          target.latitude
+        ).toFixed(6)}, ${Number(target.longitude).toFixed(6)}</div>`;
+        html += `<div style="margin-top:8px; display:flex; gap:8px">`;
+        html += `<button class="btn" id="centerOnMapBtn">Center on map</button>`;
+        html += `<button class="btn" id="openFullJsonBtn">View JSON</button>`;
+        html += `</div>`;
+
+        html += `<hr style="opacity:0.06; margin:10px 0">`;
+        html += `<div style="font-weight:700; margin-bottom:6px">Competitors (${comps.length})</div>`;
+        if (!comps.length)
+          html += `<div style="color:var(--muted)">No competitors saved.</div>`;
+        else {
+          html += `<div style="display:grid; gap:6px; max-height:160px; overflow:auto">`;
+          comps.forEach((c) => {
+            html += `<div style="padding:6px; border-radius:8px; background:rgba(255,255,255,0.02); display:flex; justify-content:space-between; align-items:center">
+        <div style="flex:1"><div style="font-weight:700">${escapeHtml(
+          c.name || "—"
+        )}</div><div style="color:var(--muted); font-size:12px">${escapeHtml(
+              c.vicinity || (c.details && c.details.vicinity) || ""
+            )}</div></div>
+        <div style="font-size:12px; color:var(--muted)">${new Date(
+          c.created_at || ""
+        ).toLocaleString()}</div>
+      </div>`;
+          });
+          html += `</div>`;
+        }
+
+        html += `<hr style="opacity:0.06; margin:10px 0">`;
+        html += `<div style="font-weight:700; margin-bottom:6px">Foot traffic (${fts.length})</div>`;
+        if (!fts.length)
+          html += `<div style="color:var(--muted)">No foot-traffic saved.</div>`;
+        else {
+          html += `<div style="display:grid; gap:6px; max-height:120px; overflow:auto">`;
+          fts.forEach((ff) => {
+            const sname =
+              ff.source_name ||
+              (ff.details && (ff.details.name || ff.details.source)) ||
+              "Venue";
+            html += `<div style="padding:6px; border-radius:8px; background:rgba(255,255,255,0.02);"><div style="font-weight:700">${escapeHtml(
+              sname
+            )}</div><div style="color:var(--muted); font-size:12px">${JSON.stringify(
+              ff.details || {}
+            ).slice(0, 150)}</div></div>`;
+          });
+          html += `</div>`;
+        }
+
+        if (aiText) {
+          html += `<hr style="opacity:0.06; margin:10px 0">`;
+          html += `<div style="font-weight:700; margin-bottom:6px">AI Analysis</div>`;
+          html += `<div style="color:var(--muted); white-space:pre-wrap">${escapeHtml(
+            String(aiText)
+          )}</div>`;
+        }
+
+        recordDetails.innerHTML = html;
+
+        // Attach actions
+        const centerBtn = document.getElementById("centerOnMapBtn");
+        if (centerBtn)
+          centerBtn.addEventListener("click", () => {
+            try {
+              if (
+                typeof map !== "undefined" &&
+                target.latitude &&
+                target.longitude
+              ) {
+                map.panTo({
+                  lat: Number(target.latitude),
+                  lng: Number(target.longitude),
+                });
+                map.setZoom(16);
+              }
+            } catch (e) {
+              console.warn("map center failed", e);
+            }
+          });
+
+        const jsonBtn = document.getElementById("openFullJsonBtn");
+        if (jsonBtn)
+          jsonBtn.addEventListener("click", () => {
+            const w = window.open("", "_blank");
+            w.document.body.style.background = "#07102a";
+            w.document.body.style.color = "#dbe2f0";
+            w.document.title = `Target ${targetId} JSON`;
+            const pre = w.document.createElement("pre");
+            pre.style.whiteSpace = "pre-wrap";
+            pre.style.fontFamily = "monospace";
+            pre.style.fontSize = "12px";
+            pre.textContent = JSON.stringify(target, null, 2);
+            w.document.body.appendChild(pre);
+          });
+      }
+
+      if (btnRefreshRecords)
+        btnRefreshRecords.addEventListener("click", loadRecords);
+
+      /***********************
+       * Map & markers
+       ***********************/
+
+      let map,
+        targetMarker = null,
+        tempMarker = null,
+        infoWindow = null;
+      let competitorMarkers = [];
+      let targetLatLng = null;
+      let latestCompetitors = [];
+      let lastAddressComponents = {}; // kept for when user opens Population panel
+
+      function makeSvgIcon({
+        bg = "#fff",
+        fg = "#07102a",
+        label = "",
+        size = 36,
+        ring = false,
+        ringColor = "rgba(0,0,0,0.12)",
+        ringThickness = 3,
+        ringInnerColor = null,
+        ringDash = false,
+      } = {}) {
+        const r = Math.max(24, size);
+        const corner = Math.round(r * 0.18);
+        const fontSize = Math.round(r * 0.42);
+        const labelEsc = String(label || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        let dashAttr = ringDash
+          ? `stroke-dasharray="${Math.max(2, Math.round(r / 6))},${Math.max(
+              2,
+              Math.round(r / 8)
+            )}"`
+          : "";
+        let ringSvg = "";
+        if (ring) {
+          ringSvg += `<rect x="${ringThickness / 2}" y="${
+            ringThickness / 2
+          }" width="${r - ringThickness}" height="${
+            r - ringThickness
+          }" rx="${corner}" fill="none" stroke="${ringColor}" stroke-width="${ringThickness}" ${dashAttr} />`;
+          if (ringInnerColor) {
+            const innerInset = ringThickness + 2;
+            ringSvg += `<rect x="${innerInset}" y="${innerInset}" width="${
+              r - innerInset * 2
+            }" height="${r - innerInset * 2}" rx="${Math.round(
+              corner * 0.85
+            )}" fill="none" stroke="${ringInnerColor}" stroke-width="1.4" opacity="0.95"/>`;
+          }
+        }
+        const filterId = `f${Math.random().toString(36).slice(2, 8)}`;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${r}' height='${r}' viewBox='0 0 ${r} ${r}'><defs><filter id="${filterId}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="2" stdDeviation="${Math.max(
+          1,
+          r / 24
+        )}" flood-color="#000" flood-opacity="0.32"/></filter></defs><g filter="url(#${filterId})"><rect x="0" y="0" width="${r}" height="${r}" rx="${corner}" fill="${bg}" />${ringSvg}<text x="50%" y="52%" font-family="Inter, Arial, sans-serif" font-size="${fontSize}" text-anchor="middle" fill="${fg}" dy=".35em" font-weight="700">${labelEsc}</text></g></svg>`;
+        return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+      }
+
+      function placeMarketMarker(latlng) {
+        if (targetMarker) targetMarker.setMap(null);
+        const icon = makeSvgIcon({
+          bg: "#60a5fa",
+          fg: "#07102a",
+          label: "M",
+          size: 52,
+          ring: true,
+          ringColor: "rgba(96,165,250,0.18)",
+          ringThickness: 4,
+          ringInnerColor: "rgba(34,211,238,0.12)",
+        });
+        targetMarker = new google.maps.Marker({
+          position: latlng,
+          map,
+          icon: {
+            url: icon,
+            scaledSize: new google.maps.Size(52, 52),
+            anchor: new google.maps.Point(26, 26),
+          },
+          zIndex: 999,
+          title: "Market",
+        });
+        targetMarker.addListener("click", () => {
+          if (infoWindow) infoWindow.close();
+          infoWindow = new google.maps.InfoWindow({
+            content: `<div style="font-weight:700">Market</div><div style="color:var(--muted)">${latlng.lat.toFixed(
+              6
+            )}, ${latlng.lng.toFixed(6)}</div>`,
+          });
+          infoWindow.open(map, targetMarker);
+        });
+      }
+
+      function extractLatLng(item) {
+        if (!item) return null;
+        if (item.geometry && item.geometry.location) {
+          const loc = item.geometry.location;
+          if (typeof loc.lat === "function" && typeof loc.lng === "function")
+            return { lat: loc.lat(), lng: loc.lng() };
+          if (loc.lat !== undefined && loc.lng !== undefined)
+            return { lat: Number(loc.lat), lng: Number(loc.lng) };
+        }
+        if (item.lat !== undefined && item.lng !== undefined)
+          return { lat: Number(item.lat), lng: Number(item.lng) };
+        if (item.latitude !== undefined && item.longitude !== undefined)
+          return { lat: Number(item.latitude), lng: Number(item.longitude) };
+        if (
+          item.location &&
+          item.location.lat !== undefined &&
+          item.location.lng !== undefined
+        )
+          return {
+            lat: Number(item.location.lat),
+            lng: Number(item.location.lng),
+          };
+        return null;
+      }
+
+      function getMapsApiKeyFromScript() {
+        try {
+          const scripts = Array.from(document.getElementsByTagName("script"));
+          for (const s of scripts) {
+            if (
+              s.src &&
+              s.src.indexOf("maps.googleapis.com/maps/api/js") !== -1
+            ) {
+              const url = new URL(s.src, location.href);
+              return url.searchParams.get("key") || null;
+            }
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      function buildPlacePhotoUrl(photo_reference, maxwidth = 400) {
+        const key = getMapsApiKeyFromScript();
+        if (!photo_reference || !key) return null;
+        return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxwidth}&photoreference=${encodeURIComponent(
+          photo_reference
+        )}&key=${encodeURIComponent(key)}`;
+      }
+
+      function getItemImageUrl(item) {
+        if (item.photos && item.photos.length) {
+          const pref =
+            item.photos[0].photo_reference ||
+            item.photos[0].photoReference ||
+            item.photos[0].photo_reference;
+          const url = buildPlacePhotoUrl(pref, 400);
+          if (url) return url;
+        }
+        if (item.photo_reference) {
+          const url = buildPlacePhotoUrl(item.photo_reference, 400);
+          if (url) return url;
+        }
+        if (
+          item.icon &&
+          typeof item.icon === "string" &&
+          item.icon.indexOf("http") === 0
+        )
+          return item.icon;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'><rect width='100%' height='100%' fill='#0b1220'/><text x='50%' y='50%' fill='#8b9bb0' font-family='Inter,Arial' font-size='12' text-anchor='middle' dominant-baseline='middle'>No image</text></svg>`;
+        return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+      }
+
+      function addCompetitorMarkers(items) {
+        competitorMarkers.forEach((m) => m.setMap(null));
+        competitorMarkers = [];
+        if (!items || !items.length) return;
+        const bounds = new google.maps.LatLngBounds();
+        if (targetLatLng) bounds.extend(targetLatLng);
+        items.forEach((item, idx) => {
+          const pos = extractLatLng(item);
+          if (!pos) return;
+          bounds.extend(pos);
+          const labelText = String(idx + 1);
+          const icon = makeSvgIcon({
+            bg: "#ffffff",
+            fg: "#07102a",
+            label: labelText,
+            size: 42,
+            color: "#FF3B30",
+            circular: true,
+            ring: true,
+            ringColor: "rgba(255,59,48,0.18)",
+            ringThickness: 3,
+            ringInnerColor: "rgba(255,99,72,0.06)",
+            ringDash: false,
+            retina: true,
+          });
+          const marker = new google.maps.Marker({
+            position: pos,
+            map,
+            icon: {
+              url: icon,
+              scaledSize: new google.maps.Size(42, 42),
+              anchor: new google.maps.Point(21, 21),
+            },
+            zIndex: 800 - idx,
+            title: item.name || `Competitor ${idx + 1}`,
+          });
+          marker.item = item;
+          marker.addListener("click", () => {
+            if (infoWindow) infoWindow.close();
+            const name = item.name || "Unknown";
+            const address = item.vicinity || item.formatted_address || "";
+            const rating = item.rating;
+            const reviews = item.user_ratings_total || 0;
+            const imgUrl = getItemImageUrl(item);
+            const photoHtml = imgUrl
+              ? `<div style="float:left;margin-right:8px;width:120px;height:90px;overflow:hidden;border-radius:8px;background:#111"><img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover" alt="${escapeHtml(
+                  name
+                )}"/></div>`
+              : "";
+            let ratingHtml = "";
+            if (rating !== undefined && rating !== null)
+              ratingHtml = `<div style="margin-top:6px;color:#fbbf24">${"★".repeat(
+                Math.floor(rating)
+              )} ${Number(rating).toFixed(1)} (${reviews})</div>`;
+            let distHtml = "";
+            if (targetLatLng) {
+              const p1 = new google.maps.LatLng(
+                targetLatLng.lat,
+                targetLatLng.lng
+              );
+              const p2 = new google.maps.LatLng(pos.lat, pos.lng);
+              const meters =
+                google.maps.geometry.spherical.computeDistanceBetween(p1, p2);
+              distHtml = `<div style="color:var(--muted)">${(
+                meters / 1000
+              ).toFixed(2)} km</div>`;
+            }
+            const html = `<div style="display:flex;min-width:280px">${photoHtml}<div style="flex:1"><div style="font-weight:700">${escapeHtml(
+              name
+            )}</div>${
+              address
+                ? `<div style="color:var(--muted)">${escapeHtml(address)}</div>`
+                : ""
+            }${ratingHtml}${distHtml}</div></div>`;
+            infoWindowinfoWindow = new google.maps.InfoWindow({
+              content: html,
+            });
+            infoWindow.open(map, marker);
+          });
+          competitorMarkers.push(marker);
+        });
+        try {
+          map.fitBounds(bounds, 80);
+        } catch (e) {
+          console.warn("fitBounds failed", e);
+        }
+      }
+
+      function escapeHtml(s) {
+        return String(s || "").replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[m])
+        );
+      }
+
+      /**************************
+       * initMap
+       **************************/
+      window._gmPlaceholderFired = false;
+      window.initMap = function () {
+        window._gmPlaceholderFired = true;
+      };
+      function realInitMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 14.5995, lng: 120.9842 },
+          zoom: 13,
+          streetViewControl: false,
+        });
+        map.addListener("click", (e) => {
+          const pos = e.latLng.toJSON();
+          if (tempMarker) tempMarker.setMap(null);
+          tempMarker = new google.maps.Marker({ position: pos, map });
+          document.getElementById("lat").value = pos.lat.toFixed(6);
+          document.getElementById("lng").value = pos.lng.toFixed(6);
+          document.getElementById(
+            "selectedInfo"
+          ).textContent = `Selected: ${pos.lat.toFixed(6)}, ${pos.lng.toFixed(
+            6
+          )}`;
+          document.getElementById("modalBackdrop").style.display = "flex";
+        });
+      }
+      const mapsReadyInterval = setInterval(() => {
+        if (window.google && google.maps && !map) {
+          clearInterval(mapsReadyInterval);
+          try {
+            realInitMap();
+          } catch (e) {
+            console.error(e);
+            showOverlayError("Map init error");
+          }
+        }
+      }, 100);
+      setTimeout(() => {
+        clearInterval(mapsReadyInterval);
+      }, 8000);
+
+      /**************************
+       * POST submit: DON'T send client-side address_components
+       * so the backend will call establishments1.get_address_components
+       **************************/
+      async function safePost(url, payload) {
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const text = await res.text();
+          if (!text) return { ok: false, status: res.status, text: "" };
+          try {
+            return { ok: res.ok, status: res.status, json: JSON.parse(text) };
+          } catch (e) {
+            return { ok: res.ok, status: res.status, text };
+          }
+        } catch (err) {
+          return { ok: false, error: err };
+        }
+      }
+
+      document.getElementById("cancelBtn").addEventListener("click", () => {
+        document.getElementById("modalBackdrop").style.display = "none";
+        if (tempMarker) {
+          tempMarker.setMap(null);
+          tempMarker = null;
+        }
+      });
+
+      document
+        .getElementById("submitBtn")
+        .addEventListener("click", async () => {
+          const lat = parseFloat(document.getElementById("lat").value);
+          const lng = parseFloat(document.getElementById("lng").value);
+          const business_type =
+            document.getElementById("businessType").value || "other";
+          const description =
+            document.getElementById("description").value || "";
+          if (!lat || !lng) {
+            document.getElementById("status").textContent =
+              "Please select a location.";
+            return;
+          }
+
+          targetLatLng = { lat, lng };
+          placeMarketMarker(targetLatLng);
+          document.getElementById("modalBackdrop").style.display = "none";
+
+          // Show loading overlay
+          const loadingOverlay = document.createElement("div");
+          loadingOverlay.id = "submissionLoading";
+          loadingOverlay.style.cssText = `
+            position: fixed;
+            inset: 0;
+            background: rgba(7, 16, 42, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+          `;
+          loadingOverlay.innerHTML = `
+            <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; text-align: center; min-width: 300px;">
+              <svg width="48" height="48" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 16px;">
+                <g transform="translate(1 1)" stroke="#60a5fa" stroke-width="2" fill="none" fill-rule="evenodd">
+                  <circle stroke-opacity=".2" cx="18" cy="18" r="18"/>
+                  <path d="M36 18c0-9.94-8.06-18-18-18">
+                    <animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="1s" repeatCount="indefinite"/>
+                  </path>
+                </g>
+              </svg>
+              <div style="font-weight: 700; font-size: 16px; margin-bottom: 8px;">Processing Location</div>
+              <div style="color: var(--muted); font-size: 14px;">Fetching competitors and demographics...</div>
+            </div>
+          `;
+          document.body.appendChild(loadingOverlay);
+
+          // Disable btnGeneratePreview and btnSaveTarget
+          const btnGenPreview = document.getElementById("btnGeneratePreview");
+          const btnSave = document.getElementById("btnSaveTarget");
+          if (btnGenPreview) {
+            btnGenPreview.setAttribute("disabled", "true");
+            btnGenPreview.style.opacity = "0.5";
+            btnGenPreview.title = "Please wait for foot traffic data";
+          }
+          if (btnSave) {
+            btnSave.setAttribute("disabled", "true");
+            btnSave.style.opacity = "0.5";
+            btnSave.title = "Please wait for AI analysis";
+          }
+
+          // Reset flags
+          window._submissionComplete = false;
+          window._footTrafficComplete = false;
+          window._aiAnalysisComplete = false;
+
+          // IMPORTANT: send address_components as empty object so server uses establishments1.get_address_components
+          const payload = {
+            latitude: lat,
+            longitude: lng,
+            business_type,
+            description,
+            address_components: {},
+          };
+
+          const res = await safePost("/submit_establishment", payload);
+
+          if (res.json && res.json.ok) {
+            const data = res.json.data || {};
+            window.lastSubmitted = {
+              business_type: business_type,
+              description: description,
+            };
+            window.otherEstablishments =
+              data.other_establishments || data.otherEstablishments || [];
+            // capture address components returned by server to use when user opens Population panel
+            lastAddressComponents = data.address_components || {};
+            // competitors
+            latestCompetitors = data.competitors || [];
+            // sort by rating desc by default
+            latestCompetitors.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            populateCompetitorList(latestCompetitors);
+            addCompetitorMarkers(latestCompetitors);
+
+            // Mark submission complete
+            window._submissionComplete = true;
+
+            // --- notify the foot-traffic guard that a submission completed so btnFoot is enabled & cache is ready ---
+            try {
+              // ensure numeric lat/lng (convert if they are strings)
+              const _lat =
+                typeof lat !== "undefined"
+                  ? Number(lat)
+                  : window.targetLat
+                  ? Number(window.targetLat)
+                  : null;
+              const _lng =
+                typeof lng !== "undefined"
+                  ? Number(lng)
+                  : window.targetLng
+                  ? Number(window.targetLng)
+                  : null;
+
+              if (
+                _lat == null ||
+                _lng == null ||
+                Number.isNaN(_lat) ||
+                Number.isNaN(_lng)
+              ) {
+                console.warn("ft: lat/lng not available to mark submission:", {
+                  lat,
+                  lng,
+                  windowTargetLat: window.targetLat,
+                  windowTargetLng: window.targetLng,
+                });
+              } else if (
+                window.ftAPI &&
+                typeof window.ftAPI.markSubmission === "function"
+              ) {
+                const ok = window.ftAPI.markSubmission({
+                  lat: _lat,
+                  lng: _lng,
+                  business_type,
+                  description,
+                });
+                console.info("ftAPI.markSubmission called, returned:", ok);
+              } else {
+                // fallback minimal enable in case ft helper hasn't loaded yet
+                window._ft = window._ft || {};
+                window._ft.submitted = true; // ensure guard recognizes submission
+                const bf = document.getElementById("btnFoot");
+                if (bf) {
+                  bf.removeAttribute("disabled");
+                  bf.style.opacity = "";
+                  bf.title = "Visualize foot traffic";
+                }
+                console.info(
+                  "ft: ftAPI not present; enabled btnFoot fallback."
+                );
+              }
+            } catch (e) {
+              console.error("Error while notifying foot-traffic guard:", e);
+            }
+
+            // Remove loading overlay
+            const overlay = document.getElementById("submissionLoading");
+            if (overlay) overlay.remove();
+
+            // population stats aggregated by server (if provided)
+            if (data.population && Object.keys(data.population).length > 0) {
+              renderPopulationPanel(data.population);
+              // show population panel
+              hideAllPanels();
+              btnP.classList.add("active");
+              panelP.classList.add("open");
+              panelP.style.display = "block";
+              panelP.setAttribute("aria-hidden", "false");
+            } else {
+              // server didn't return population aggregation; user can open P to fetch barangays (server demographics endpoint will use server-side municipality)
+            }
+          } else {
+            // Remove loading overlay on error
+            const overlay = document.getElementById("submissionLoading");
+            if (overlay) overlay.remove();
+
+            document.getElementById("status").textContent = res.json
+              ? res.json.error || "Server error"
+              : res.error
+              ? res.error.message
+              : "Unknown error";
+            console.error("submit_establishment error", res);
+          }
+        });
+
+      /**************************
+       * Competitor list UI (sorted + rating)
+       **************************/
+      function populateCompetitorList(items) {
+        // already sorted server-side; ensure fallback sort
+        items = items.slice().sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        const list = document.getElementById("compList");
+        list.innerHTML = "";
+        items.forEach((it, idx) => {
+          const pos = extractLatLng(it);
+          const div = document.createElement("div");
+          div.className = "comp-item";
+          const img = document.createElement("img");
+          img.alt = it.name || "img";
+          img.style.width = "120px";
+          img.style.height = "90px";
+          img.style.objectFit = "cover";
+          img.style.borderRadius = "8px";
+
+          // embedded SVG placeholder (data URI) — reliable offline fallback
+          const svgPlaceholderComp = encodeURI(
+            "data:image/svg+xml;utf8," +
+              "<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'>" +
+              "<rect width='100%' height='100%' fill='%23071a2a'/>" +
+              "<text x='50%' y='50%' fill='%238aa' font-size='12' text-anchor='middle' alignment-baseline='middle'>No+Image</text>" +
+              "</svg>"
+          );
+
+          // prefer the place/photo URL, else fallback immediately to svg
+          const itemImage = getItemImageUrl(it) || svgPlaceholderComp;
+          img.src = itemImage;
+
+          // if remote image fails to load, show the embedded SVG placeholder
+          img.onerror = function () {
+            this.onerror = null;
+            this.src = svgPlaceholderComp;
+          };
+          const meta = document.createElement("div");
+          meta.style.flex = "1";
+          const ratingVal =
+            it.rating !== undefined && it.rating !== null
+              ? Number(it.rating).toFixed(1)
+              : null;
+          const ratingStars = ratingVal
+            ? "★".repeat(Math.floor(it.rating))
+            : "";
+          const ratingHtml = ratingVal
+            ? `<span style="color:#fbbf24;font-weight:700">${ratingStars}</span> <span style="color:var(--muted);margin-left:6px">${ratingVal}</span>`
+            : `<span style="color:var(--muted)">—</span>`;
+          meta.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-weight:700">${escapeHtml(
+            it.name || "Competitor " + (idx + 1)
+          )}</div><div style="font-size:13px">${ratingHtml}</div></div><div style="color:var(--muted);font-size:13px">${escapeHtml(
+            it.vicinity || it.formatted_address || ""
+          )}</div>`;
+          div.appendChild(img);
+          div.appendChild(meta);
+          div.addEventListener("click", () => {
+            if (pos) {
+              map.panTo(pos);
+              map.setZoom(17);
+            }
+          });
+          list.appendChild(div);
+        });
+        document.getElementById("compCount").textContent = items.length;
+      }
+
+      document.getElementById("btnCenterAll").addEventListener("click", () => {
+        if (!latestCompetitors || !latestCompetitors.length) return;
+        const bounds = new google.maps.LatLngBounds();
+        if (targetLatLng) bounds.extend(targetLatLng);
+        latestCompetitors.forEach((it) => {
+          const p = extractLatLng(it);
+          if (p) bounds.extend(p);
+        });
+        map.fitBounds(bounds, 80);
+      });
+
+      /**************************
+       * Population: fetch barangays by municipality and render
+       * Note: server demographics endpoints accept ?municipality=... and merged_app will query DB.
+       **************************/
+      let MOCK = {
+        "Talon Dos": {
+          Barangay: "Talon Dos",
+          Total_MF: 27450,
+          Total_M: 13420,
+          Total_F: 14030,
+          Child_MF: 5300,
+          Teen_MF: 4900,
+          YoungAdult_MF: 6650,
+          Adult_MF: 8100,
+          Senior_MF: 2500,
+        },
+      };
+      let selectedBrgys = new Set(Object.keys(MOCK));
+
+      async function loadBarangaysIntoPanel() {
+        const brgyListEl = document.getElementById("brgyList");
+        if (brgyListEl.children.length) return;
+        // determine municipality source:
+        // prefer server-determined municipality (lastAddressComponents.municipality) returned from /submit_establishment
+        // else fallback to 'LAS PIÑAS'
+        const municipality =
+          lastAddressComponents && lastAddressComponents.municipality
+            ? lastAddressComponents.municipality
+            : "LAS PIÑAS";
+        try {
+          const q = `/demographics?municipality=${encodeURIComponent(
+            municipality
+          )}`;
+          const r = await fetch(q);
+          if (r.ok) {
+            const payload = await r.json();
+            const rows = payload.rows || payload || [];
+            if (Array.isArray(rows) && rows.length) {
+              brgyListEl.innerHTML = "";
+              rows.forEach((row) => {
+                const name =
+                  row.Barangay || row.barangay || row.name || row.BRGY || "";
+                if (!name) return;
+                const id = "cb-" + name.replace(/\W+/g, "-");
+                const label = document.createElement("label");
+                label.style.display = "flex";
+                label.style.gap = "8px";
+                label.style.alignItems = "center";
+                const input = document.createElement("input");
+                input.type = "checkbox";
+                input.id = id;
+                input.checked = true;
+                selectedBrgys.add(name);
+                input.addEventListener("change", () => {
+                  if (input.checked) selectedBrgys.add(name);
+                  else selectedBrgys.delete(name);
+                  updatePopulationFromRows(rows);
+                });
+                const span = document.createElement("span");
+                span.textContent = name;
+                label.appendChild(input);
+                label.appendChild(span);
+                brgyListEl.appendChild(label);
+              });
+              brgyListEl._rows = rows;
+              updatePopulationFromRows(rows);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn("demographics fetch failed", e);
+        }
+        // fallback to MOCK
+        brgyListEl.innerHTML = "";
+        Object.keys(MOCK).forEach((name) => {
+          const id = "cb-" + name.replace(/\W+/g, "-");
+          const label = document.createElement("label");
+          label.style.display = "flex";
+          label.style.gap = "8px";
+          label.style.alignItems = "center";
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.id = id;
+          input.checked = true;
+          selectedBrgys.add(name);
+          input.addEventListener("change", () => {
+            if (input.checked) selectedBrgys.add(name);
+            else selectedBrgys.delete(name);
+            updatePopulationFromMock();
+          });
+          const span = document.createElement("span");
+          span.textContent = name;
+          label.appendChild(input);
+          label.appendChild(span);
+          brgyListEl.appendChild(label);
+        });
+        brgyListEl._rows = null;
+        updatePopulationFromMock();
+      }
+
+      function updatePopulationFromRows(rows) {
+        const sel = Array.from(selectedBrgys);
+        const selectedRows = rows.filter((r) =>
+          sel.includes(r.Barangay || r.barangay || r.name || r.BRGY)
+        );
+        const agg = {
+          total: 0,
+          male: 0,
+          female: 0,
+          children: 0,
+          teens: 0,
+          young_adults: 0,
+          adults: 0,
+          seniors: 0,
+          rows: selectedRows.length,
+          rows_raw: selectedRows,
+        };
+        selectedRows.forEach((r) => {
+          const getnum = (o, ...k) => {
+            for (const key of k)
+              if (o[key] !== undefined && o[key] !== null)
+                return Number(o[key]) || 0;
+            return 0;
+          };
+          agg.total += getnum(r, "Total_MF", "Total", "total");
+          agg.male += getnum(r, "Total_M", "male");
+          agg.female += getnum(r, "Total_F", "female");
+          agg.children += getnum(r, "Child_MF", "children");
+          agg.teens += getnum(r, "Teen_MF", "teens");
+          agg.young_adults += getnum(r, "YoungAdult_MF", "young_adults");
+          agg.adults += getnum(r, "Adult_MF", "adults");
+          agg.seniors += getnum(r, "Senior_MF", "seniors");
+        });
+        renderPopulationPanel(agg);
+      }
+
+      function updatePopulationFromMock() {
+        const sel = Array.from(selectedBrgys);
+        let agg = {
+          total: 0,
+          male: 0,
+          female: 0,
+          children: 0,
+          teens: 0,
+          young_adults: 0,
+          adults: 0,
+          seniors: 0,
+          rows: sel.length,
+          rows_raw: [],
+        };
+        sel.forEach((name) => {
+          const d = MOCK[name];
+          if (!d) return;
+          agg.total += d.Total_MF || 0;
+          agg.male += d.Total_M || 0;
+          agg.female += d.Total_F || 0;
+          agg.children += d.Child_MF || 0;
+          agg.teens += d.Teen_MF || 0;
+          agg.young_adults += d.YoungAdult_MF || 0;
+          agg.adults += d.Adult_MF || 0;
+          agg.seniors += d.Senior_MF || 0;
+          agg.rows_raw.push(d);
+        });
+        renderPopulationPanel(agg);
+      }
+
+      function renderPopulationPanel(pop) {
+        if (panelP.style.display !== "block") {
+          hideAllPanels();
+          btnP.classList.add("active");
+          panelP.classList.add("open");
+          panelP.style.display = "block";
+          panelP.setAttribute("aria-hidden", "false");
+        }
+        document.getElementById("statTotal").textContent =
+          pop.total || 0 ? pop.total.toLocaleString() : "—";
+        document.getElementById("statMale").textContent =
+          pop.male || 0 ? pop.male.toLocaleString() : "—";
+        document.getElementById("statFemale").textContent =
+          pop.female || 0 ? pop.female.toLocaleString() : "—";
+        const malePct = pop.total
+          ? Math.round((pop.male / pop.total) * 100)
+          : 0;
+        const femalePct = pop.total
+          ? Math.round((pop.female / pop.total) * 100)
+          : 0;
+        document.getElementById("statMalePct").textContent = malePct
+          ? `${malePct}%`
+          : "—";
+        document.getElementById("statFemalePct").textContent = femalePct
+          ? `${femalePct}%`
+          : "—";
+
+        // bar chart
+        try {
+          const ctx = document.getElementById("barAge").getContext("2d");
+          if (window._barAgeChart) window._barAgeChart.destroy();
+          window._barAgeChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: ["Children", "Teens", "Young", "Adults", "Seniors"],
+              datasets: [
+                {
+                  label: "Count",
+                  data: [
+                    pop.children || 0,
+                    pop.teens || 0,
+                    pop.young_adults || 0,
+                    pop.adults || 0,
+                    pop.seniors || 0,
+                  ],
+                  backgroundColor: "#60a5fa",
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: { beginAtZero: true },
+              },
+            },
+          });
+        } catch (e) {
+          console.warn("bar chart", e);
+        }
+
+        // pie chart
+        try {
+          const ctx2 = document.getElementById("pieGender").getContext("2d");
+          if (window._pieGenderChart) window._pieGenderChart.destroy();
+          window._pieGenderChart = new Chart(ctx2, {
+            type: "doughnut",
+            data: {
+              labels: ["Male", "Female"],
+              datasets: [
+                {
+                  data: [pop.male || 0, pop.female || 0],
+                  backgroundColor: ["#60a5fa", "#22d3ee"],
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: "bottom", labels: { color: "#cbd5e1" } },
+              },
+            },
+          });
+        } catch (e) {
+          console.warn("pie chart", e);
+        }
+
+        // table
+        const tbody = document.getElementById("tblBody");
+        tbody.innerHTML = "";
+        const rows = pop.rows || pop.rows_raw || [];
+        if (Array.isArray(rows) && rows.length) {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            const get = (o, ...k) => {
+              for (const key of k)
+                if (o[key] !== undefined && o[key] !== null) return o[key];
+              return "";
+            };
+            const totalRow = get(r, "Total_MF", "Total", "total") || "";
+            const maleRow = get(r, "Total_M", "male") || "";
+            const femaleRow = get(r, "Total_F", "female") || "";
+            const child = get(r, "Child_MF", "children") || "";
+            const teen = get(r, "Teen_MF", "teens") || "";
+            const young = get(r, "YoungAdult_MF", "young_adults") || "";
+            const adult = get(r, "Adult_MF", "adults") || "";
+            const senior = get(r, "Senior_MF", "seniors") || "";
+            tr.innerHTML = `<td style="text-align:left">${escapeHtml(
+              get(r, "Barangay", "barangay", "name") || ""
+            )}</td><td>${totalRow}</td><td>${maleRow}</td><td>${femaleRow}</td><td>${child}</td><td>${teen}</td><td>${young}</td><td>${adult}</td><td>${senior}</td>`;
+            tbody.appendChild(tr);
+          });
+        } else {
+          // fallback to selected mock
+          const keys = Array.from(selectedBrgys);
+          keys.forEach((k) => {
+            const d = MOCK[k];
+            if (!d) return;
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td style="text-align:left">${escapeHtml(
+              k
+            )}</td><td>${d.Total_MF}</td><td>${d.Total_M}</td><td>${
+              d.Total_F
+            }</td><td>${d.Child_MF}</td><td>${d.Teen_MF}</td><td>${
+              d.YoungAdult_MF
+            }</td><td>${d.Adult_MF}</td><td>${d.Senior_MF}</td>`;
+            tbody.appendChild(tr);
+          });
+        }
+      }
+
+      /**************************
+       * Utilities
+       **************************/
+      (function () {
+        // --- utility functions ---
+        function $(sel, root = document) {
+          return root.querySelector(sel);
+        }
+        function escapeHtml(s) {
+          return String(s || "").replace(
+            /[&<>"']/g,
+            (c) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              }[c])
+          );
+        }
+        function clamp(v, min, max) {
+          return Math.max(min, Math.min(max, v));
+        }
+        const hours = Array.from({ length: 24 }, (_, i) => i);
+        const dayNames = [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ];
+
+        // color ramp using CSS variables fallback
+        function cellBgColor(val, maxVal) {
+          const t = maxVal ? val / maxVal : 0;
+          const hue = 200 - 20 * t; // 200..180
+          const light = clamp(80 - Math.round(50 * t), 30, 80);
+          const sat = 70 - Math.round(20 * (1 - t));
+          return `hsl(${hue} ${sat}% ${light}%)`;
+        }
+
+        // Render a single venue table into container
+        function renderVenueTable(container, venue) {
+          container.innerHTML = "";
+          const title = document.createElement("div");
+          title.className = "ft-venue-title";
+          title.innerHTML = `<div>${escapeHtml(
+            venue.venue_name || venue.venue_address || "Venue"
+          )}</div>
+                       <div style="color:var(--muted);font-size:12px">${escapeHtml(
+                         venue.venue_address || ""
+                       )}</div>`;
+          container.appendChild(title);
+
+          const raw = (venue.venue_foot_traffic_forecast || [])
+            .slice()
+            .sort((a, b) => a.day_int - b.day_int);
+          // compute global max to scale colors
+          let maxVal = 0;
+          raw.forEach((d) => {
+            if (Array.isArray(d.day_raw))
+              d.day_raw.forEach((v) => {
+                if (Number(v) > maxVal) maxVal = Number(v);
+              });
+          });
+          // create card wrapper
+          const wr = document.createElement("div");
+          wr.className = "ft-table card";
+          const table = document.createElement("table");
+          table.className = "ft";
+          // header
+          const thead = document.createElement("thead");
+          const trh = document.createElement("tr");
+          trh.appendChild(
+            Object.assign(document.createElement("th"), { textContent: "" })
+          );
+          hours.forEach((h) => {
+            const th = document.createElement("th");
+            th.className = "hour";
+            th.textContent = h;
+            trh.appendChild(th);
+          });
+          thead.appendChild(trh);
+          table.appendChild(thead);
+
+          const tbody = document.createElement("tbody");
+          for (let d = 0; d < 7; d++) {
+            const rowData = raw.find((r) => Number(r.day_int) === d);
+            const vals =
+              rowData && Array.isArray(rowData.day_raw)
+                ? rowData.day_raw.slice(0, 24)
+                : Array(24).fill(0);
+            const tr = document.createElement("tr");
+            const tdDay = document.createElement("td");
+            tdDay.style.textAlign = "left";
+            tdDay.style.paddingLeft = "8px";
+            tdDay.textContent = dayNames[d] || "Day " + d;
+            tr.appendChild(tdDay);
+            vals.forEach((v) => {
+              const td = document.createElement("td");
+              const n = Number(v) || 0;
+              const span = document.createElement("span");
+              span.className = "ft-cell";
+              span.textContent = n > 0 ? String(n) : "";
+              span.dataset.val = n;
+
+              // assign qualitative level for CSS styling
+              if (n === 0) span.dataset.level = "none";
+              else if (n <= maxVal * 0.33) span.dataset.level = "low";
+              else if (n <= maxVal * 0.66) span.dataset.level = "mid";
+              else span.dataset.level = "high";
+
+              td.appendChild(span);
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          }
+          table.appendChild(tbody);
+          wr.appendChild(table);
+
+          // legend
+          const legend = document.createElement("div");
+          legend.className = "ft-legend";
+          legend.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:20px;height:12px;background:${cellBgColor(
+          0,
+          maxVal
+        )};border-radius:3px"></div> 0
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:20px;height:12px;background:${cellBgColor(
+          Math.round(maxVal * 0.5),
+          maxVal
+        )};border-radius:3px"></div> ${Math.round(maxVal * 0.5)}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:20px;height:12px;background:${cellBgColor(
+          maxVal,
+          maxVal
+        )};border-radius:3px"></div> ${maxVal}
+      </div>`;
+          wr.appendChild(legend);
+
+          container.appendChild(wr);
+        }
+
+        // Create tabs UI for multiple venues
+        function renderVenues(container, venues) {
+          container.innerHTML = "";
+          const root = document.createElement("div");
+          root.className = "ft-root";
+
+          if (!Array.isArray(venues) || venues.length === 0) {
+            root.innerHTML =
+              '<div class="ft-error">No foot-traffic data returned.</div>';
+            container.appendChild(root);
+            return;
+          }
+
+          // tabs row
+          const tabs = document.createElement("div");
+          tabs.className = "ft-tabs";
+          venues.forEach((v, idx) => {
+            const btn = document.createElement("button");
+            btn.className = "ft-tab";
+            btn.textContent = v.venue_name || `Venue ${idx + 1}`;
+            btn.addEventListener("click", () => {
+              // mark active
+              tabs
+                .querySelectorAll(".ft-tab")
+                .forEach((t) => t.classList.remove("active"));
+              btn.classList.add("active");
+              // render selected venue
+              renderVenueTable(content, v);
+            });
+            if (idx === 0) btn.classList.add("active");
+            tabs.appendChild(btn);
+          });
+          root.appendChild(tabs);
+
+          const content = document.createElement("div");
+          content.className = "ft-content";
+          root.appendChild(content);
+
+          // render first
+          renderVenueTable(content, venues[0]);
+
+          container.appendChild(root);
+        }
+
+        // Try to read lat,lng,business_type from common ids or window globals
+        function detectInputs() {
+          const candLat = [
+            "#targetLat",
+            "#inputLat",
+            "#lat",
+            "#latitude",
+            "#frmLat",
+          ];
+          const candLng = [
+            "#targetLng",
+            "#inputLng",
+            "#lng",
+            "#longitude",
+            "#frmLng",
+          ];
+          const candBiz = [
+            "#businessType",
+            "#bizType",
+            "#business_type",
+            "#type",
+          ];
+
+          let lat = null,
+            lng = null,
+            business_type = null;
+          for (const s of candLat) {
+            const el = document.querySelector(s);
+            if (el && el.value) {
+              lat = parseFloat(el.value);
+              break;
+            }
+          }
+          for (const s of candLng) {
+            const el = document.querySelector(s);
+            if (el && el.value) {
+              lng = parseFloat(el.value);
+              break;
+            }
+          }
+          for (const s of candBiz) {
+            const el = document.querySelector(s);
+            if (el && el.value) {
+              business_type = el.value;
+              break;
+            }
+          }
+
+          // fallback to window vars
+          if ((lat === null || Number.isNaN(lat)) && window.targetLat)
+            lat = Number(window.targetLat);
+          if ((lng === null || Number.isNaN(lng)) && window.targetLng)
+            lng = Number(window.targetLng);
+          if (!business_type && window.business_type)
+            business_type = window.business_type;
+          if (!business_type && window.businessType)
+            business_type = window.businessType;
+
+          // final cleanup
+          if (Number.isNaN(lat)) lat = null;
+          if (Number.isNaN(lng)) lng = null;
+
+          return { lat, lng, business_type };
+        }
+
+        // display helper
+        function setPanelHtml(html) {
+          const panel = document.getElementById("panelFoot");
+          if (!panel) {
+            console.warn("panelFoot not found in DOM.");
+            return;
+          }
+          panel.innerHTML = html;
+        }
+
+        // main fetch function
+        async function fetchFootTraffic(lat, lng, business_type) {
+          const panel = document.getElementById("panelFoot");
+          if (!panel) throw new Error("panelFoot not found");
+
+          panel.innerHTML =
+            '<div class="ft-loading">Loading foot traffic…</div>';
+          try {
+            const resp = await fetch("/foot_traffic/closest", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ lat, lng, business_type }),
+            });
+            if (!resp.ok) {
+              const txt = await resp.text().catch(() => resp.statusText);
+              panel.innerHTML = `<div class="ft-error">Server error: ${escapeHtml(
+                txt
+              )}</div>`;
+              return;
+            }
+            const data = await resp.json();
+            // normalize response: accept top_venues, venues, results or plain array
+            let venues = data;
+            if (!Array.isArray(venues)) {
+              if (data && Array.isArray(data.top_venues))
+                venues = data.top_venues;
+              else if (data && Array.isArray(data.venues)) venues = data.venues;
+              else if (data && Array.isArray(data.results))
+                venues = data.results;
+              else if (data && Array.isArray(data.items)) venues = data.items;
+              else venues = [];
+            }
+            console.debug(
+              "Normalized venues (count):",
+              Array.isArray(venues) ? venues.length : 0,
+              venues
+            );
+            renderVenues(panel, venues);
+          } catch (err) {
+            panel.innerHTML = `<div class="ft-error">Request failed: ${escapeHtml(
+              err.message || String(err)
+            )}</div>`;
+          }
+        }
+
+        // attach click handler to btnFoot
+        function init() {
+          const btn = document.getElementById("btnFoot");
+          const panel = document.getElementById("panelFoot");
+          if (!btn) {
+            console.warn("btnFoot not found - foot traffic button not wired.");
+            return;
+          }
+          if (!panel) {
+            console.warn(
+              "panelFoot not found - cannot render foot traffic panel."
+            );
+          }
+
+          btn.addEventListener("click", async function () {
+            // detect inputs
+            const { lat, lng, business_type } = detectInputs();
+            // If there's explicit submission flag, require it; otherwise require lat/lng and business_type/description to be present AND the lastSubmissionKey to match
+            if (!window._ft.submitted) {
+              // if user filled inputs but didn't 'submit', show instructive message
+              if (vals.lat && vals.lng) {
+                showPanelMessage(
+                  "Please click the Submit button (to confirm target location & business details) before visualizing foot traffic.",
+                  true
+                );
+              } else {
+                showPanelMessage(
+                  "Please select a target location and click Submit first.",
+                  true
+                );
+              }
+              return;
+            }
+
+            // confirm we have lat/lng
+            if (!lat || !lng) {
+              if (panel) {
+                panel.innerHTML = `<div class="ft-error">Submitted state found but latitude/longitude missing. Please re-submit the target location.</div>`;
+              } else {
+                alert(
+                  "Please submit a target location first (lat/lng not found)."
+                );
+              }
+              return;
+            }
+
+            // everything ok -> fetch and render
+            await fetchFootTraffic(lat, lng, business_type || null);
+          });
+        }
+
+        // run init on DOM ready
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init);
+        } else {
+          init();
+        }
+      })();
+
+      // ------------------ Utility function to get saved barangays for later integration ------------------
+      window.getSavedSelectedBarangays = function () {
+        return window.savedSelectedBarangays || [];
+      };
+
+      // ------------------ Function to clear saved barangays (if needed) ------------------
+      window.clearSavedBarangays = function () {
+        window.savedSelectedBarangays = [];
+        console.log("Saved barangays cleared");
+      };
+
+      console.log(
+        "Updated: panel widened, server geocode enforced, competitor images larger and sorted by rating. AI integration ready with barangay storage."
+      );
+    </script>
+    <script>
+      // === Fix: set lastSubmitted & otherEstablishments INSIDE the submit success branch ===
+      // We already set lastAddressComponents, latestCompetitors etc. inside the submit handler.
+      // Ensure window.lastSubmitted and window.otherEstablishments are also initialized safely.
+      window.lastSubmitted = window.lastSubmitted || {
+        business_type: "",
+        description: "",
+      };
+      window.otherEstablishments = window.otherEstablishments || [];
+
+      // Helper that builds the payload for the AI analysis / preview
+      function buildAnalysisPayload() {
+        const target = targetLatLng || null;
+        const biz = window.lastSubmitted || {
+          business_type: "",
+          description: "",
+        };
+
+        // population aggregation (keeps your existing logic)
+        let population_summary = {};
+        try {
+          const brgyEl = document.getElementById("brgyList");
+          const rows = brgyEl && brgyEl._rows ? brgyEl._rows.slice() : null;
+          if (rows && rows.length) {
+            const sel = Array.from(selectedBrgys || []);
+            const selectedRows = rows.filter((r) =>
+              sel.includes(r.Barangay || r.barangay || r.name || r.BRGY)
+            );
+            const agg = {
+              total: 0,
+              male: 0,
+              female: 0,
+              children: 0,
+              teens: 0,
+              young_adults: 0,
+              adults: 0,
+              seniors: 0,
+              rows: selectedRows.length,
+              rows_raw: selectedRows,
+            };
+            selectedRows.forEach((r) => {
+              const get = (o, ...keys) => {
+                for (const k of keys)
+                  if (o[k] !== undefined && o[k] !== null)
+                    return Number(o[k]) || 0;
+                return 0;
+              };
+              agg.total += get(r, "Total_MF", "Total", "total");
+              agg.male += get(r, "Total_M", "male");
+              agg.female += get(r, "Total_F", "female");
+              agg.children += get(r, "Child_MF", "children");
+              agg.teens += get(r, "Teen_MF", "teens");
+              agg.young_adults += get(r, "YoungAdult_MF", "young_adults");
+              agg.adults += get(r, "Adult_MF", "adults");
+              agg.seniors += get(r, "Senior_MF", "seniors");
+            });
+            population_summary = agg;
+          }
+        } catch (e) {
+          console.warn("buildAnalysisPayload population aggregation failed", e);
+        }
+
+        const comps = latestCompetitors || [];
+        const other_est = window.otherEstablishments || [];
+
+        // FOOT TRAFFIC: try to read the last fetched venues from the ft helper cache
+        let foot_traffic = [];
+        try {
+          if (window._ft && window._ft.lastSubmissionKey && window._ft.cache) {
+            foot_traffic = window._ft.cache[window._ft.lastSubmissionKey] || [];
+          } else {
+            // fallback: if a renderVenues or last fetched variable exists, use it
+            if (window._ft && Array.isArray(window._ft.lastFetchedVenues)) {
+              foot_traffic = window._ft.lastFetchedVenues;
+            }
+          }
+        } catch (e) {
+          console.warn("Could not read foot_traffic from window._ft:", e);
+          foot_traffic = [];
+        }
+
+        const selectedBarangaysList = Array.from(selectedBrgys || []);
+        if (selectedBarangaysList.length > 0) {
+          window.savedSelectedBarangays = selectedBarangaysList;
+          console.log(
+            "Selected barangays saved for later integration:",
+            selectedBarangaysList
+          );
+        }
+
+        return {
+          target_location: target,
+          business_type: biz.business_type || "",
+          description: biz.description || "",
+          population_summary: population_summary,
+          selected_barangays: selectedBarangaysList,
+          competitors: comps,
+          other_establishments: other_est,
+          foot_traffic: foot_traffic, // <-- new
+        };
+      }
+
+      // VERY small Markdown -> HTML helper (handles headers, bold, italics, simple lists, line breaks)
+      function mdToHtml(md) {
+        if (!md) return "";
+        // escape HTML first
+        const esc = (s) =>
+          String(s || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        const escaped = esc(md);
+        const lines = escaped.split("\n");
+
+        const out = [];
+        let paraBuffer = [];
+        let listItems = [];
+        let inList = false;
+
+        function flushPara() {
+          if (paraBuffer.length) {
+            out.push("<p>" + paraBuffer.join("<br>") + "</p>");
+            paraBuffer = [];
+          }
+        }
+        function flushList() {
+          if (inList && listItems.length) {
+            out.push("<ul>" + listItems.join("") + "</ul>");
+            listItems = [];
+            inList = false;
+          }
+        }
+
+        for (let rawLine of lines) {
+          const line = rawLine.replace(/\r/g, "");
+          // Headers: supports 1..6 hashes
+          const h = line.match(/^\s{0,3}(#{1,6})\s+(.*)$/);
+          if (h) {
+            flushList();
+            flushPara();
+            const level = Math.min(6, h[1].length);
+            out.push(`<h${level}>${h[2].trim()}</h${level}>`);
+            continue;
+          }
+
+          // Unordered list item (basic)
+          const li = line.match(/^\s*[-*]\s+(.*)$/);
+          if (li) {
+            flushPara();
+            inList = true;
+            listItems.push(`<li>${li[1]}</li>`);
+            continue;
+          }
+
+          // Empty line -> paragraph / list boundary
+          if (/^\s*$/.test(line)) {
+            flushList();
+            flushPara();
+            continue;
+          }
+
+          // Otherwise it's paragraph content (allow simple line breaks)
+          paraBuffer.push(line);
+        }
+
+        // flush any remaining buffers
+        flushList();
+        flushPara();
+
+        // Join and then convert inline markdown (bold, italic)
+        let html = out.join("\n");
+
+        // Bold (**) then italic (*). non-greedy to avoid overcapture
+        html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+        html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+        return html;
+      }
+      // === Attach handler to the correct button id: btnGeneratePreview ===
+      const genBtn = document.getElementById("btnGeneratePreview");
+      // --- Save Target Location button behaviour ---
+      // Requires buildAnalysisPayload() to exist (your file has it)
+      (function () {
+        const saveBtn = document.getElementById("btnSaveTarget");
+        if (!saveBtn) {
+          console.warn("#btnSaveTarget not found");
+          return;
+        }
+
+        async function fetchAIAnalysisIfNeeded(payload) {
+          // If you already have server-side /generate_analysis, call it to get AI analysis text
+          try {
+            const res = await fetch("/generate_analysis", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            if (!res.ok) {
+              console.warn("generate_analysis returned non-ok:", res.status);
+              return null;
+            }
+            const j = await res.json().catch(() => null);
+            if (j && j.ok && j.analysis) return j.analysis;
+            return null;
+          } catch (e) {
+            console.warn("Error calling /generate_analysis:", e);
+            return null;
+          }
+        }
+
+        saveBtn.addEventListener("click", async (ev) => {
+          // Check if AI analysis is complete
+          if (!window._aiAnalysisComplete) {
+            alert(
+              "Please generate AI analysis first by clicking 'Generate AI Preview' or 'Generate Analysis' button."
+            );
+            return;
+          }
+
+          try {
+            // Build the same payload you already use for the AI preview
+            const payload = buildAnalysisPayload
+              ? buildAnalysisPayload()
+              : null;
+            if (!payload || !payload.target_location) {
+              console.warn(
+                "No payload or target_location; please select a location first."
+              );
+              return;
+            }
+
+            // Try to enrich with AI analysis (best-effort; falls back to not having it)
+            const aiText = await fetchAIAnalysisIfNeeded(payload);
+            // attach the analysis string (if present)
+            payload.ai_analysis = aiText || null;
+
+            try {
+              console.info("Posting payload to /save_target...", payload);
+
+              const r = await fetch("/save_target", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "same-origin", // use 'include' if cross-origin
+                body: JSON.stringify(payload),
+              });
+
+              // handle 401 (not logged in) specially
+              if (r.status === 401) {
+                console.warn("Not authenticated (401). Please log in first.");
+                alert(
+                  "You must be logged in to save a target. Redirecting to login."
+                );
+                window.location.href = "login.html";
+                return;
+              }
+
+              const resJson = await r.json().catch(() => null);
+
+              if (!r.ok) {
+                console.warn(
+                  "Server /save_target returned non-ok:",
+                  r.status,
+                  resJson
+                );
+                alert(
+                  "Save failed: " +
+                    (resJson && resJson.error ? resJson.error : "Server error")
+                );
+              } else {
+                console.info(
+                  "Saved to server /save_target (response ok).",
+                  resJson
+                );
+                // small UI feedback
+                saveBtn.textContent = "Saved ✓";
+                setTimeout(
+                  () => (saveBtn.textContent = "Save Target Location"),
+                  1400
+                );
+
+                // optional: set a global var so other parts (foot traffic) can pick it up
+                window.lastSavedTarget = resJson.target_id || null;
+              }
+            } catch (e) {
+              console.error("Failed to POST /save_target:", e);
+              alert("Network error while saving. See console for details.");
+            }
+          } catch (err) {
+            console.error("Save Target handler failed:", err);
+            alert("Save Target failed — see console for details.");
+          }
+        });
+      })();
+
+      if (genBtn) {
+        genBtn.addEventListener("click", async () => {
+          // Check if foot traffic is complete
+          if (!window._footTrafficComplete) {
+            alert(
+              "Please wait for foot traffic data to load first. Click the 'F' button to fetch foot traffic data."
+            );
+            return;
+          }
+
+          const chat = document.getElementById("chat");
+          chat.innerHTML = ""; // clear
+
+          // Build payload and validate
+          const payload = buildAnalysisPayload();
+          if (!payload.target_location) {
+            chat.innerHTML =
+              '<div style="color:#f87171">Please select a location on the map first.</div>';
+            return;
+          }
+
+          // Display loading indicator
+          const loading = document.createElement("div");
+          loading.textContent = "Preparing AI preview...";
+          loading.style.color = "#60a5fa";
+          loading.style.fontWeight = "700";
+          chat.appendChild(loading);
+
+          try {
+            // For now, if you don't have a /generate_analysis endpoint, we can just show a preview of the payload
+            // Comment the preview branch and use the real POST when your backend endpoint exists.
+            // ----- PREVIEW MODE (client-side) -----
+            chat.removeChild(loading);
+
+            // helper to safely display HTML text
+            function escapeHtml(str) {
+              if (!str) return "";
+              return str.replace(
+                /[&<>"']/g,
+                (m) =>
+                  ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;",
+                  }[m])
+              );
+            }
+
+            // build a simplified competitor list
+            // embedded SVG small placeholder to avoid any external network fetch
+            const svgPlaceholderSmall = encodeURI(
+              "data:image/svg+xml;utf8," +
+                "<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'>" +
+                "<rect width='100%' height='100%' fill='%23071a2a'/>" +
+                "<text x='50%' y='50%' fill='%238aa' font-size='12' text-anchor='middle' alignment-baseline='middle'>No+Image</text>" +
+                "</svg>"
+            );
+
+            // Build parsedCompetitors — *no external placeholder used here*
+            const parsedCompetitors = (payload.competitors || []).map(
+              (c, i) => {
+                const name = c.name || `Competitor ${i + 1}`;
+                const rating =
+                  c.rating !== undefined && c.rating !== null
+                    ? Number(c.rating)
+                    : null;
+                const reviews = c.user_ratings_total || c.reviews || 0;
+
+                // If there is a Place photo object, try to use getUrl(); if it's a raw photo_reference,
+                // we try to build a Places photo URL (may require a valid key) — otherwise fallback to svgPlaceholderSmall.
+                let image = svgPlaceholderSmall;
+                try {
+                  if (c.photos && c.photos.length) {
+                    if (typeof c.photos[0].getUrl === "function") {
+                      image =
+                        c.photos[0].getUrl({ maxWidth: 400 }) ||
+                        svgPlaceholderSmall;
+                    } else if (c.photos[0].photo_reference) {
+                      // attempt to construct a Place Photo URL only if your script tag contains a key (may still fail due to CORS/billing)
+                      const key = (function () {
+                        try {
+                          const scripts = Array.from(
+                            document.getElementsByTagName("script")
+                          );
+                          for (const s of scripts) {
+                            if (
+                              s.src &&
+                              s.src.indexOf(
+                                "maps.googleapis.com/maps/api/js"
+                              ) !== -1
+                            ) {
+                              const url = new URL(s.src, location.href);
+                              return url.searchParams.get("key");
+                            }
+                          }
+                        } catch (e) {}
+                        return null;
+                      })();
+                      if (key) {
+                        image = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${encodeURIComponent(
+                          c.photos[0].photo_reference
+                        )}&key=${encodeURIComponent(key)}`;
+                      } else {
+                        image = svgPlaceholderSmall;
+                      }
+                    }
+                  } else if (
+                    c.icon &&
+                    typeof c.icon === "string" &&
+                    c.icon.indexOf("http") === 0
+                  ) {
+                    image = c.icon;
+                  }
+                } catch (e) {
+                  image = svgPlaceholderSmall;
+                }
+
+                // compute distance if possible (optional)
+                let distance_km = null;
+                try {
+                  if (
+                    payload.target_location &&
+                    c.geometry &&
+                    google &&
+                    google.maps &&
+                    google.maps.geometry
+                  ) {
+                    const p1 = new google.maps.LatLng(
+                      payload.target_location.lat,
+                      payload.target_location.lng
+                    );
+                    const pos =
+                      c.geometry && c.geometry.location
+                        ? typeof c.geometry.location.lat === "function"
+                          ? {
+                              lat: c.geometry.location.lat(),
+                              lng: c.geometry.location.lng(),
+                            }
+                          : {
+                              lat: c.geometry.location.lat,
+                              lng: c.geometry.location.lng,
+                            }
+                        : null;
+                    if (pos) {
+                      const p2 = new google.maps.LatLng(pos.lat, pos.lng);
+                      const meters =
+                        google.maps.geometry.spherical.computeDistanceBetween(
+                          p1,
+                          p2
+                        );
+                      distance_km = Number((meters / 1000).toFixed(2));
+                    }
+                  }
+                } catch (e) {
+                  distance_km = null;
+                }
+
+                const vicinity = c.vicinity || c.formatted_address || "";
+                return {
+                  name,
+                  rating,
+                  reviews,
+                  image,
+                  distance_km,
+                  vicinity,
+                  raw: c,
+                };
+              }
+            );
+
+            // Target + business info
+            const header = document.createElement("div");
+            header.innerHTML = `
+  <div style="font-weight:700;margin-bottom:6px;font-size:15px;">AI Preview</div>
+  <div style="color:#94a3b8;">Target location: ${payload.target_location?.lat?.toFixed(
+    6
+  )}, ${payload.target_location?.lng?.toFixed(6)}</div>
+  <div style="margin-top:4px;"><b>Business type:</b> ${escapeHtml(
+    payload.business_type
+  )}<br><b>Description:</b> ${escapeHtml(payload.description)}</div>
+`;
+            chat.appendChild(header);
+
+            // Population summary
+            const pop = payload.population_summary || {};
+            const popDiv = document.createElement("div");
+            popDiv.style.marginTop = "10px";
+            popDiv.style.padding = "10px";
+            popDiv.style.background = "#071227";
+            popDiv.style.borderRadius = "8px";
+            popDiv.style.border = "1px solid #1f2a44";
+            popDiv.innerHTML = `
+  <div style="font-weight:700;margin-bottom:6px;">Population summary (selected barangays)</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:13px;">
+    <div>Total: <b>${pop.total ?? "—"}</b></div>
+    <div>Male: <b>${pop.male ?? "—"}</b></div>
+    <div>Female: <b>${pop.female ?? "—"}</b></div>
+    <div>Children: <b>${pop.children ?? "—"}</b></div>
+    <div>Teens: <b>${pop.teens ?? "—"}</b></div>
+  </div>
+`;
+            chat.appendChild(popDiv);
+            // --- Foot traffic summary (insert after population UI in preview) ---
+            const ft = payload.foot_traffic || [];
+            const ftDiv = document.createElement("div");
+            ftDiv.style.marginTop = "10px";
+            ftDiv.style.padding = "10px";
+            ftDiv.style.background = "#071227";
+            ftDiv.style.borderRadius = "8px";
+            ftDiv.style.border = "1px solid #1f2a44";
+            ftDiv.innerHTML = `
+  <div style="font-weight:700;margin-bottom:6px;">Foot traffic — top venues</div>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:6px;">
+    ${
+      ft.length
+        ? `${ft.length} venues returned`
+        : "No foot-traffic data available"
+    }
+  </div>
+`;
+            if (ft.length) {
+              const list = document.createElement("div");
+              list.style.display = "grid";
+              list.style.gap = "6px";
+              list.style.fontSize = "13px";
+              ft.slice(0, 6).forEach((v, i) => {
+                const name =
+                  v.venue_name ||
+                  v.name ||
+                  (v.raw && v.raw.name) ||
+                  `Venue ${i + 1}`;
+                const score = v.score || v.foot || v.popularity || "";
+                const vicinity =
+                  v.vicinity || v.address || (v.raw && v.raw.vicinity) || "";
+                const line = document.createElement("div");
+                line.innerHTML = `<strong>${escapeHtml(name)}</strong> ${
+                  score ? `— ${escapeHtml(String(score))}` : ""
+                } <div style="color:#94a3b8;font-size:12px;">${escapeHtml(
+                  vicinity
+                )}</div>`;
+                list.appendChild(line);
+              });
+              ftDiv.appendChild(list);
+              if (ft.length > 6) {
+                const more = document.createElement("div");
+                more.style.color = "#94a3b8";
+                more.style.fontSize = "12px";
+                more.style.marginTop = "6px";
+                more.textContent = `+ ${ft.length - 6} more venues`;
+                ftDiv.appendChild(more);
+              }
+            }
+            chat.appendChild(ftDiv);
+
+            // Selected barangays
+            const brgys = payload.selected_barangays || [];
+            const brgyDiv = document.createElement("div");
+            brgyDiv.style.marginTop = "10px";
+            brgyDiv.innerHTML = `
+  <div style="font-weight:700;margin-bottom:4px;">Selected barangays (${
+    brgys.length
+  })</div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+    ${brgys
+      .map(
+        (b) =>
+          `<span style="background:#081225;padding:6px 8px;border-radius:6px;border:1px solid #1f2a44;font-size:13px;">${escapeHtml(
+            b
+          )}</span>`
+      )
+      .join("")}
+  </div>
+`;
+            chat.appendChild(brgyDiv);
+
+            // Competitors
+            const compHeader = document.createElement("div");
+            compHeader.style.marginTop = "12px";
+            compHeader.style.fontWeight = "700";
+            compHeader.textContent = `Competitors (${parsedCompetitors.length})`;
+            chat.appendChild(compHeader);
+
+            const compWrap = document.createElement("div");
+            compWrap.style.display = "grid";
+            compWrap.style.gridTemplateColumns =
+              "repeat(auto-fill,minmax(250px,1fr))";
+            compWrap.style.gap = "10px";
+            compWrap.style.marginTop = "8px";
+
+            parsedCompetitors.forEach((c) => {
+              const card = document.createElement("div");
+              card.style.display = "flex";
+              card.style.alignItems = "center";
+              card.style.gap = "10px";
+              card.style.background = "#071227";
+              card.style.border = "1px solid #1f2a44";
+              card.style.borderRadius = "8px";
+              card.style.padding = "8px";
+
+              const img = document.createElement("img");
+              img.alt = c.name;
+              img.style.width = "90px";
+              img.style.height = "70px";
+              img.style.borderRadius = "6px";
+              img.style.objectFit = "cover";
+
+              const svgPlaceholder = encodeURI(
+                "data:image/svg+xml;utf8," +
+                  "<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'>" +
+                  "<rect width='100%' height='100%' fill='%23071a2a'/>" +
+                  "<text x='50%' y='50%' fill='%238aa' font-size='18' text-anchor='middle' alignment-baseline='middle'>No+Image</text>" +
+                  "</svg>"
+              );
+
+              img.src = c.image || svgPlaceholder;
+
+              img.onerror = function () {
+                this.onerror = null;
+                this.src = svgPlaceholder;
+              };
+
+              const meta = document.createElement("div");
+              meta.innerHTML = `
+  <div style="font-weight:700;">${escapeHtml(c.name)}</div>
+  <div style="color:#94a3b8;font-size:13px;">⭐ ${c.rating} (${c.reviews})</div>
+`;
+
+              card.appendChild(img);
+              card.appendChild(meta);
+              compWrap.appendChild(card);
+            });
+            chat.appendChild(compWrap);
+
+            // console log for debugging
+            console.log("AI preview payload:", payload);
+            console.log("Parsed competitors:", parsedCompetitors);
+          } catch (e) {
+            try {
+              chat.removeChild(loading);
+            } catch (_) {}
+            const errorDiv = document.createElement("div");
+            errorDiv.style.color = "#f87171";
+            errorDiv.textContent = `Request failed: ${e.message || e}`;
+            chat.appendChild(errorDiv);
+            console.error("generate preview failed", e);
+          }
+        });
+      } else {
+        console.warn(
+          "#btnGeneratePreview not found - cannot attach preview handler."
+        );
+      }
+
+      // Keep your existing Generate (SendBtn) behavior:
+      (function () {
+        const sendBtn = document.getElementById("sendBtn");
+        let currentAnimator = null;
+        let currentFetchCtrl = null;
+
+        function setBtnState(running) {
+          if (running) {
+            sendBtn.setAttribute("disabled", "disabled");
+            sendBtn.style.opacity = "0.6";
+          } else {
+            sendBtn.removeAttribute("disabled");
+            sendBtn.style.opacity = "";
+          }
+        }
+
+        // animate text into an element, returns a controller with stop()
+        function animateText(el, text, msPerChar) {
+          let i = 0;
+          let timer = null;
+          // keep a plain-text buffer of everything typed so far
+          // (we'll render the fullBuffer as HTML once animation completes)
+          let fullBuffer = "";
+
+          const controller = {
+            stop() {
+              if (timer) {
+                clearInterval(timer);
+                timer = null;
+              }
+            },
+          };
+
+          // ensure target is empty and show plain escaped text while streaming
+          el.innerHTML = "";
+
+          // helper: escape HTML so any "<" or "&" in the text won't be interpreted while streaming
+          function escapeForStream(s) {
+            return String(s || "")
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;");
+          }
+
+          // append one character (or chunk) while keeping newlines as <br>
+          const appendChar = (ch) => {
+            // accumulate plain text (not escaped) for final md rendering
+            fullBuffer += ch;
+            // append escaped char to DOM (so markdown tokens like ** remain visible while streaming)
+            // convert newline to <br> for nicer line breaks while typing
+            if (ch === "\n") {
+              el.innerHTML += "<br>";
+            } else {
+              el.innerHTML += escapeForStream(ch);
+            }
+            el.scrollTop = el.scrollHeight;
+          };
+
+          timer = setInterval(() => {
+            if (i >= text.length) {
+              clearInterval(timer);
+              timer = null;
+              // Convert the completed plain-text buffer into sanitized HTML using existing mdToHtml()
+              // mdToHtml already escapes HTML input before converting markdown tokens.
+              try {
+                el.innerHTML = mdToHtml(fullBuffer);
+                el.scrollTop = el.scrollHeight;
+              } catch (err) {
+                // fallback: if mdToHtml fails, leave the escaped stream content
+                console.error("mdToHtml failed:", err);
+              }
+              return;
+            }
+            appendChar(text[i]);
+            i++;
+          }, msPerChar);
+
+          return controller;
+        }
+
+        async function onGenerateClicked(e) {
+          e.preventDefault();
+
+          // Check if foot traffic is complete
+          if (!window._footTrafficComplete) {
+            alert(
+              "Please wait for foot traffic data to load first. Click the 'F' button to fetch foot traffic data."
+            );
+            return;
+          }
+
+          const chat = document.getElementById("chat");
+          chat.innerHTML = ""; // clear previous
+          const payload = buildAnalysisPayload(); // existing helper
+          if (!payload.target_location) {
+            chat.innerHTML =
+              '<div style="color:#f87171">Please select a location on the map first.</div>';
+            return;
+          }
+
+          // show loading
+          const loading = document.createElement("div");
+          loading.style.color = "#60a5fa";
+          loading.style.fontWeight = "700";
+          loading.style.display = "flex";
+          loading.style.alignItems = "center";
+          loading.style.gap = "8px";
+          loading.innerHTML = `<svg width="16" height="16" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg"><g transform="translate(1 1)" stroke="#60a5fa" stroke-width="2" fill="none" fill-rule="evenodd"><circle stroke-opacity=".2" cx="18" cy="18" r="18"/><path d="M36 18c0-9.94-8.06-18-18-18"><animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="1s" repeatCount="indefinite"/></path></g></svg> Generating AI analysis...`;
+          chat.appendChild(loading);
+
+          // setup abort controller so Stop can cancel the fetch
+          currentFetchCtrl = new AbortController();
+          setBtnState(true);
+
+          try {
+            const res = await fetch("/generate_analysis", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+              signal: currentFetchCtrl.signal,
+            });
+
+            let json;
+            try {
+              json = await res.json();
+            } catch (e) {
+              throw new Error("Invalid JSON response from server");
+            }
+
+            // remove loading
+            if (loading.parentNode) loading.parentNode.removeChild(loading);
+
+            if (!json || !json.ok) {
+              const errorDiv = document.createElement("div");
+              errorDiv.style.color = "#f87171";
+              errorDiv.style.padding = "8px";
+              errorDiv.textContent =
+                json && json.error ? "Error: " + json.error : "Analysis failed";
+              chat.appendChild(errorDiv);
+              console.error("generate_analysis failed", json);
+              setBtnState(false);
+              return;
+            }
+
+            const text = json.analysis || "";
+            // Create message bubble similar to ChatGPT theme
+            const bubble = document.createElement("div");
+            bubble.style.background =
+              "linear-gradient(90deg, rgba(8,18,37,0.7), rgba(8,18,37,0.85))";
+            bubble.style.border = "1px solid rgba(255,255,255,0.03)";
+            bubble.style.padding = "12px";
+            bubble.style.borderRadius = "10px";
+            bubble.style.marginTop = "8px";
+            bubble.style.whiteSpace = "pre-wrap";
+            bubble.style.fontSize = "14px";
+            bubble.style.lineHeight = "1.5";
+            bubble.style.color = "#e6eefc";
+            chat.appendChild(bubble);
+
+            // animate with fixed speed (50ms per character for smooth animation)
+            const ms = 10;
+            if (currentAnimator) {
+              currentAnimator.stop();
+              currentAnimator = null;
+            }
+            currentAnimator = animateText(bubble, text, ms);
+
+            // once finished, re-enable
+            // simple watcher: poll for completion by checking if animator has internal timer cleared
+            const waitForFinish = setInterval(() => {
+              // there's no direct accessor; check if bubble.innerHTML length equals text length
+              const strippedHtml = bubble.innerHTML.replace(/<br>/g, "\n");
+              if (strippedHtml.length >= text.length) {
+                clearInterval(waitForFinish);
+                currentAnimator = null;
+                currentFetchCtrl = null;
+                setBtnState(false);
+
+                // Mark AI analysis complete and enable Save Target button
+                window._aiAnalysisComplete = true;
+                const btnSave = document.getElementById("btnSaveTarget");
+                if (btnSave) {
+                  btnSave.removeAttribute("disabled");
+                  btnSave.style.opacity = "";
+                  btnSave.title = "Save target location";
+                }
+
+                // Add TTS button with the analysis text
+                if (typeof window.addTTSButton === "function") {
+                  window.addTTSButton(text);
+                }
+
+                // also append a tiny note showing selected barangays if server returned them
+                if (
+                  Array.isArray(json.selected_barangays) &&
+                  json.selected_barangays.length
+                ) {
+                  const note = document.createElement("div");
+                  note.style.color = "#94a3b8";
+                  note.style.marginTop = "10px";
+                  note.style.fontSize = "12px";
+                  note.textContent =
+                    "Saved barangays: " + json.selected_barangays.join(", ");
+                  chat.appendChild(note);
+                }
+              }
+            }, 120);
+          } catch (err) {
+            if (err.name === "AbortError") {
+              const ab = document.createElement("div");
+              ab.style.color = "#f59e0b";
+              ab.style.marginTop = "8px";
+              ab.textContent = "Generation stopped.";
+              chat.appendChild(ab);
+            } else {
+              const errorDiv = document.createElement("div");
+              errorDiv.style.color = "#f87171";
+              errorDiv.style.marginTop = "8px";
+              errorDiv.textContent = "Request failed: " + (err.message || err);
+              chat.appendChild(errorDiv);
+              console.error("generate_analysis fetch failed", err);
+            }
+            // cleanup animator if present
+            if (currentAnimator && typeof currentAnimator.stop === "function")
+              currentAnimator.stop();
+            currentAnimator = null;
+            currentFetchCtrl = null;
+            setBtnState(false);
+          }
+        }
+
+        if (sendBtn) sendBtn.addEventListener("click", onGenerateClicked);
+      })();
+
+      // IMPORTANT: when /submit_establishment returns successfully, make sure to set these globals inside that success branch:
+      // window.lastSubmitted = { business_type: <string>, description: <string> }
+      // window.otherEstablishments = data.other_establishments || data.otherEstablishments || []
+      // You already have code that sets lastAddressComponents, latestCompetitors, etc — add these two lines there.
+    </script>
+    <script>
+      /*
+  Foot-traffic submit-control + cache helper
+  - Paste this once near the end of index123.html (before </body>).
+  - It will:
+    1) Require a "submit" event (or clicking a submit-like button) to mark the target as submitted.
+    2) Disable #btnFoot until submission happens.
+    3) Cache the server response per-submission and avoid repeated POSTs for the same submission.
+*/
+
+      (function () {
+        // --- utilities ---
+        function $(sel, root = document) {
+          return root.querySelector(sel);
+        }
+        function on(el, ev, fn) {
+          if (!el) return;
+          el.addEventListener(ev, fn);
+        }
+        function text(s) {
+          return String(s == null ? "" : s);
+        }
+        function hashKey(lat, lng, biz, desc) {
+          return `${lat || ""}|${lng || ""}|${biz || ""}|${(desc || "").slice(
+            0,
+            120
+          )}`;
+        }
+
+        // --- state (exposed on window for debugging) ---
+        window._ft = window._ft || {};
+        window._ft.submitted = window._ft.submitted || false;
+        window._ft.lastSubmissionKey = window._ft.lastSubmissionKey || null;
+        window._ft.cache = window._ft.cache || {}; // key -> venues array
+
+        // --- helper: read inputs (attempt common ids and window vars) ---
+        function readInputs() {
+          const candLat = [
+            "#targetLat",
+            "#inputLat",
+            "#lat",
+            "#latitude",
+            "#frmLat",
+          ];
+          const candLng = [
+            "#targetLng",
+            "#inputLng",
+            "#lng",
+            "#longitude",
+            "#frmLng",
+          ];
+          const candBiz = [
+            "#businessType",
+            "#bizType",
+            "#business_type",
+            "#type",
+            "#category",
+          ];
+          const candDesc = [
+            "#description",
+            "#desc",
+            "#businessDescription",
+            "#bizDesc",
+          ];
+
+          let lat = null,
+            lng = null,
+            business_type = null,
+            description = null;
+          for (const s of candLat) {
+            const el = document.querySelector(s);
+            if (el && el.value) {
+              lat = Number(el.value);
+              break;
+            }
+          }
+          for (const s of candLng) {
+            const el = document.querySelector(s);
+            if (el && el.value) {
+              lng = Number(el.value);
+              break;
+            }
+          }
+          for (const s of candBiz) {
+            const el = document.querySelector(s);
+            if (el && el.value) {
+              business_type = el.value;
+              break;
+            }
+          }
+          for (const s of candDesc) {
+            const el = document.querySelector(s);
+            if (el && el.value) {
+              description = el.value;
+              break;
+            }
+          }
+
+          // fallbacks to global vars if set by other code flows
+          if ((lat === null || Number.isNaN(lat)) && window.targetLat)
+            lat = Number(window.targetLat);
+          if ((lng === null || Number.isNaN(lng)) && window.targetLng)
+            lng = Number(window.targetLng);
+          if (!business_type && (window.business_type || window.businessType))
+            business_type = window.business_type || window.businessType;
+          if (!description && window.business_description)
+            description = window.business_description;
+
+          if (Number.isNaN(lat)) lat = null;
+          if (Number.isNaN(lng)) lng = null;
+
+          return {
+            lat,
+            lng,
+            business_type: business_type || "",
+            description: description || "",
+          };
+        }
+
+        // --- UI helpers ---
+        function setBtnFootEnabled(enabled) {
+          const btn = document.getElementById("btnFoot");
+          if (!btn) return;
+          if (enabled) {
+            btn.removeAttribute("disabled");
+            btn.style.opacity = "";
+            btn.title = "Visualize foot traffic";
+          } else {
+            btn.setAttribute("disabled", "true");
+            btn.style.opacity = "0.5";
+            btn.title = "Submit a target location first";
+          }
+        }
+        function showPanelMessage(msg, isError) {
+          const panel = document.getElementById("panelFoot");
+          if (!panel) return;
+          panel.innerHTML = `<div style="padding:12px;color:${
+            isError ? "var(--danger,#ff7b7b)" : "var(--muted,#9aa0a6)"
+          }">${msg}</div>`;
+        }
+
+        // --- normalize server response helper (if your server wraps results) ---
+        function normalizeServerResponse(data) {
+          if (Array.isArray(data)) return data;
+          if (data && Array.isArray(data.top_venues)) return data.top_venues;
+          if (data && Array.isArray(data.venues)) return data.venues;
+          if (data && Array.isArray(data.results)) return data.results;
+          if (data && Array.isArray(data.items)) return data.items;
+          return []; // fallback
+        }
+
+        // --- fetch wrapper that uses cache ---
+        async function fetchFootTrafficWithCache(
+          lat,
+          lng,
+          business_type,
+          description
+        ) {
+          const key = hashKey(lat, lng, business_type, description);
+          // use cached result if available
+          if (window._ft.cache[key]) {
+            console.info(
+              "ft: using cached foot-traffic for current submission"
+            );
+            // render using existing renderVenues if available; else just show message
+            if (typeof renderVenues === "function") {
+              renderVenues(
+                document.getElementById("panelFoot"),
+                window._ft.cache[key]
+              );
+            } else {
+              showPanelMessage(
+                "Foot-traffic (cached) — rendering not available because renderVenues() not found",
+                false
+              );
+            }
+            window._ft.lastSubmissionKey = key;
+            return;
+          }
+
+          // else do actual POST
+          try {
+            showPanelMessage("Loading foot traffic…");
+            const resp = await fetch("/foot_traffic/closest", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ lat, lng, business_type }),
+            });
+            if (!resp.ok) {
+              const txt = await resp.text().catch(() => resp.statusText);
+              showPanelMessage(`Server error: ${txt}`, true);
+              return;
+            }
+            let data = await resp.json().catch(async () => {
+              const t = await resp.text().catch(() => "<non-json>");
+              throw new Error("Server returned non-JSON: " + t);
+            });
+            const venues = normalizeServerResponse(data);
+            window._ft.cache[key] = venues;
+            window._ft.lastSubmissionKey = key;
+            if (typeof renderVenues === "function") {
+              renderVenues(document.getElementById("panelFoot"), venues);
+            } else {
+              showPanelMessage(
+                "Foot-traffic received. But renderVenues() not found to visualize.",
+                true
+              );
+            }
+          } catch (err) {
+            console.error("ft fetch error", err);
+            showPanelMessage(
+              "Request failed: " + (err.message || String(err)),
+              true
+            );
+          }
+        }
+
+        // --- mark submission (call this when user submits their target) ---
+        function markSubmission(lat, lng, business_type, description) {
+          window._ft.submitted = true;
+          window._ft.lastSubmissionKey = null; // new submission invalidates previous "last" (but cache remains)
+          // persist useful values to window so other code can read them
+          if (lat != null) window.targetLat = lat;
+          if (lng != null) window.targetLng = lng;
+          if (business_type) window.business_type = business_type;
+          if (description) window.business_description = description;
+          setBtnFootEnabled(true);
+          console.info("ft: target submitted", {
+            lat,
+            lng,
+            business_type,
+            description,
+          });
+        }
+
+        // --- find and hook submit-like elements (defensive) ---
+        function tryAttachSubmitHooks() {
+          // common submit button ids and selectors
+          const submitSelectors = [
+            "#btnSubmit",
+            "#btnSubmitLocation",
+            "#submitBtn", // <- add this
+            "#submitTarget",
+            "#saveTarget",
+            "#frmSubmit",
+            "#mapSubmit",
+            'button[type="submit"]',
+            "form#targetForm",
+            "form#frmTarget",
+          ];
+          let attached = 0;
+          // attach click listeners to known buttons
+          submitSelectors.forEach((sel) => {
+            const els = document.querySelectorAll(sel);
+            els.forEach((el) => {
+              // if it's a form, intercept submit; if button, intercept click
+              if (el.tagName === "FORM") {
+                el.addEventListener(
+                  "submit",
+                  function (e) {
+                    // allow original submit to continue — but also mark submission after a tiny delay so form handlers can set fields
+                    setTimeout(() => {
+                      const vals = readInputs();
+                      if (vals.lat && vals.lng) {
+                        markSubmission(
+                          vals.lat,
+                          vals.lng,
+                          vals.business_type,
+                          vals.description
+                        );
+                      }
+                    }, 50);
+                  },
+                  { passive: true }
+                );
+                attached++;
+              } else {
+                // button or others
+                el.addEventListener(
+                  "click",
+                  function (e) {
+                    // wait a tick to allow form or map code to populate inputs
+                    setTimeout(() => {
+                      const vals = readInputs();
+                      if (vals.lat && vals.lng) {
+                        markSubmission(
+                          vals.lat,
+                          vals.lng,
+                          vals.business_type,
+                          vals.description
+                        );
+                      }
+                    }, 50);
+                  },
+                  { passive: true }
+                );
+                attached++;
+              }
+            });
+          });
+
+          // If nothing attached, also listen globally to form submit events (catch-all)
+          if (attached === 0) {
+            document.addEventListener(
+              "submit",
+              function (e) {
+                setTimeout(() => {
+                  const vals = readInputs();
+                  if (vals.lat && vals.lng) {
+                    markSubmission(
+                      vals.lat,
+                      vals.lng,
+                      vals.business_type,
+                      vals.description
+                    );
+                  }
+                }, 50);
+              },
+              true
+            );
+          }
+        }
+
+        // --- btnFoot click handler (guard + cache) ---
+        function initBtnFootGuard() {
+          const btn = document.getElementById("btnFoot");
+          const panel = document.getElementById("panelFoot");
+          if (!btn) {
+            console.warn("ft: btnFoot not found");
+            return;
+          }
+          if (!panel) {
+            console.warn(
+              "panelFoot not found - cannot render foot traffic panel."
+            );
+          }
+
+          // initial state: disabled until submission
+          setBtnFootEnabled(!!window._ft.submitted);
+
+          btn.addEventListener("click", async function () {
+            // read known values (this reads inputs or window variables)
+            const vals = readInputs();
+            // If there's explicit submission flag, require it; otherwise require lat/lng and business_type/description to be present AND the lastSubmissionKey to match
+            if (!window._ft.submitted) {
+              // if user filled inputs but didn't 'submit', show instructive message
+              if (vals.lat && vals.lng) {
+                showPanelMessage(
+                  "Please click the Submit button (to confirm target location & business details) before visualizing foot traffic.",
+                  true
+                );
+              } else {
+                showPanelMessage(
+                  "Please select a target location and click Submit first.",
+                  true
+                );
+              }
+              return;
+            }
+
+            // confirm we have lat/lng
+            if (!vals.lat || !vals.lng) {
+              showPanelMessage(
+                "Submitted state found but latitude/longitude missing. Please re-submit the target location.",
+                true
+              );
+              return;
+            }
+
+            // compute current submission key
+            const key = hashKey(
+              vals.lat,
+              vals.lng,
+              vals.business_type,
+              vals.description
+            );
+
+            // If this key equals lastSubmissionKey and we have cache, reuse it (no new fetch)
+            if (window._ft.lastSubmissionKey === key && window._ft.cache[key]) {
+              console.info(
+                "ft: same submission as last fetch — using cached result"
+              );
+              if (typeof renderVenues === "function") {
+                renderVenues(
+                  document.getElementById("panelFoot"),
+                  window._ft.cache[key]
+                );
+              } else {
+                showPanelMessage(
+                  "Foot-traffic (cached) — visualization function not found.",
+                  true
+                );
+              }
+              // Enable btnGeneratePreview after foot traffic is loaded
+              window._footTrafficComplete = true;
+              const btnGenPreview =
+                document.getElementById("btnGeneratePreview");
+              if (btnGenPreview && window._submissionComplete) {
+                btnGenPreview.removeAttribute("disabled");
+                btnGenPreview.style.opacity = "";
+                btnGenPreview.title = "Generate AI Preview";
+              }
+              return;
+            }
+
+            // else fetch and cache, and set lastSubmissionKey after fetch
+            await fetchFootTrafficWithCache(
+              vals.lat,
+              vals.lng,
+              vals.business_type,
+              vals.description
+            );
+
+            // Enable btnGeneratePreview after foot traffic is loaded
+            window._footTrafficComplete = true;
+            const btnGenPreview = document.getElementById("btnGeneratePreview");
+            if (btnGenPreview && window._submissionComplete) {
+              btnGenPreview.removeAttribute("disabled");
+              btnGenPreview.style.opacity = "";
+              btnGenPreview.title = "Generate AI Preview";
+            }
+          });
+        }
+
+        // --- expose a manual API for your app code (optional) ---
+        window.ftAPI = window.ftAPI || {};
+        window.ftAPI.markSubmission = function ({
+          lat,
+          lng,
+          business_type,
+          description,
+        }) {
+          if (!lat || !lng) return false;
+          markSubmission(lat, lng, business_type || "", description || "");
+          return true;
+        };
+        window.ftAPI.clearCache = function () {
+          window._ft.cache = {};
+          window._ft.lastSubmissionKey = null;
+          console.info("ft cache cleared");
+        };
+        window.ftAPI.forceFetch = async function (
+          lat,
+          lng,
+          business_type,
+          description
+        ) {
+          // bypass cache and fetch fresh; also marks submission when done
+          if (!lat || !lng) throw new Error("lat/lng required");
+          const key = hashKey(lat, lng, business_type, description);
+          // remove cached for key
+          delete window._ft.cache[key];
+          await fetchFootTrafficWithCache(lat, lng, business_type, description);
+          markSubmission(lat, lng, business_type, description);
+        };
+
+        // --- bootstrapping ---
+        setTimeout(() => {
+          // slight delay so page DOM from other scripts can initialize
+          tryAttachSubmitHooks();
+          initBtnFootGuard();
+          console.info(
+            "ft guard/init done. btnFoot disabled until user submits a target. Use ftAPI.markSubmission({lat,lng,business_type,description}) to programmatically mark submission."
+          );
+        }, 120);
+      })();
+    </script>
+    <script>
+      // ==================== TEXT TO SPEECH FUNCTIONALITY ====================
+      (function () {
+        let currentAudio = null;
+        let currentAnalysisText = null;
+        let ttsButton = null;
+
+        function createTTSButton() {
+          const btn = document.createElement("button");
+          btn.id = "btnTTS";
+          btn.className = "tts-btn";
+          btn.style.marginTop = "12px";
+          btn.title = "Listen to analysis";
+          btn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+        </svg>
+        <span>Listen</span>
+      `;
+          return btn;
+        }
+
+        function showLoadingState(btn) {
+          btn.disabled = true;
+          btn.innerHTML = `
+        <div class="tts-spinner"></div>
+        <span>Loading...</span>
+      `;
+        }
+
+        function showPlayingState(btn) {
+          btn.innerHTML = `
+        <div class="sound-wave">
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+        <span>Playing</span>
+      `;
+        }
+
+        function showPausedState(btn) {
+          btn.disabled = false;
+          btn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <span>Listen</span>
+      `;
+        }
+
+        function showErrorState(btn, message) {
+          btn.disabled = false;
+          btn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span style="color:#f87171">Error</span>
+      `;
+          btn.title = message || "TTS failed";
+          setTimeout(() => showPausedState(btn), 3000);
+        }
+
+        async function fetchTTSAudio(text) {
+          try {
+            const response = await fetch("/text_to_speech", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text }),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(
+                errorData.error || `Server error: ${response.status}`
+              );
+            }
+
+            const audioBlob = await response.blob();
+            return URL.createObjectURL(audioBlob);
+          } catch (error) {
+            console.error("TTS fetch error:", error);
+            throw error;
+          }
+        }
+
+        async function handleTTSClick() {
+          if (!ttsButton || !currentAnalysisText) return;
+
+          // If audio is currently playing, pause it
+          if (currentAudio && !currentAudio.paused) {
+            currentAudio.pause();
+            showPausedState(ttsButton);
+            return;
+          }
+
+          // If audio exists and is paused, resume it
+          if (currentAudio && currentAudio.paused && currentAudio.src) {
+            currentAudio.play();
+            showPlayingState(ttsButton);
+            return;
+          }
+
+          // Otherwise, fetch new audio
+          showLoadingState(ttsButton);
+
+          try {
+            const audioUrl = await fetchTTSAudio(currentAnalysisText);
+
+            // Clean up old audio
+            if (currentAudio) {
+              currentAudio.pause();
+              URL.revokeObjectURL(currentAudio.src);
+            }
+
+            // Create new audio
+            currentAudio = new Audio(audioUrl);
+
+            currentAudio.addEventListener("play", () => {
+              showPlayingState(ttsButton);
+            });
+
+            currentAudio.addEventListener("pause", () => {
+              showPausedState(ttsButton);
+            });
+
+            currentAudio.addEventListener("ended", () => {
+              showPausedState(ttsButton);
+            });
+
+            currentAudio.addEventListener("error", (e) => {
+              console.error("Audio playback error:", e);
+              showErrorState(ttsButton, "Playback failed");
+            });
+
+            // Start playback
+            await currentAudio.play();
+          } catch (error) {
+            console.error("TTS error:", error);
+            showErrorState(ttsButton, error.message || "TTS generation failed");
+          }
+        }
+
+        // Public function to add TTS button after analysis completes
+        window.addTTSButton = function (analysisText) {
+          const chat = document.getElementById("chat");
+          if (!chat) return;
+
+          // Store the analysis text
+          currentAnalysisText = analysisText;
+
+          // Remove old TTS button if exists
+          const oldBtn = document.getElementById("btnTTS");
+          if (oldBtn) oldBtn.remove();
+
+          // Create and add new button
+          ttsButton = createTTSButton();
+          ttsButton.addEventListener("click", handleTTSClick);
+          chat.appendChild(ttsButton);
+
+          console.log("TTS button added successfully");
+        };
+
+        // Cleanup on page unload
+        window.addEventListener("beforeunload", () => {
+          if (currentAudio) {
+            currentAudio.pause();
+            URL.revokeObjectURL(currentAudio.src);
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

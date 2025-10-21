@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | Business Location Analyzer</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: white;
+        min-height: 100vh;
+      }
+
+      /* Header */
+      .header {
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 20px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .logo-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 700;
+        color: white;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .user-details {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .user-name {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .user-email {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border-radius: 10px;
+        border: none;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        color: white;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      /* Main Content */
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px;
+      }
+
+      .welcome-section {
+        margin-bottom: 40px;
+      }
+
+      .welcome-section h1 {
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .welcome-section p {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      /* Stats Container */
+      .stats-container {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 40px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 32px;
+      }
+
+      .stat-item {
+        text-align: center;
+        padding: 16px;
+      }
+
+      .stat-value {
+        font-size: 48px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      /* Content Grid */
+      .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+      }
+
+      .section-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      /* News Articles */
+      .news-section {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 30px;
+      }
+
+      .news-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
+      }
+
+      .news-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .news-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(59, 130, 246, 0.3);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      }
+
+      .news-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .news-content {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .news-category {
+        display: inline-block;
+        padding: 4px 12px;
+        background: rgba(59, 130, 246, 0.2);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #60a5fa;
+        margin-bottom: 12px;
+        text-transform: capitalize;
+        align-self: flex-start;
+      }
+
+      .news-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        line-height: 1.4;
+      }
+
+      .news-excerpt {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        line-height: 1.6;
+        margin-bottom: 16px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        flex: 1;
+      }
+
+      .news-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.4);
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .news-source {
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      /* Recent Analyses */
+      .recent-section {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 30px;
+      }
+
+      .analysis-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .analysis-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 16px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .analysis-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(139, 92, 246, 0.3);
+      }
+
+      .analysis-type {
+        font-size: 12px;
+        font-weight: 600;
+        color: #8b5cf6;
+        margin-bottom: 8px;
+        text-transform: capitalize;
+      }
+
+      .analysis-location {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .analysis-date {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      /* Loading State */
+      .loading {
+        text-align: center;
+        padding: 60px 20px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 16px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Empty State */
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+        opacity: 0.3;
+      }
+
+      /* Error State */
+      .error-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: rgba(239, 68, 68, 0.8);
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 12px;
+      }
+
+      /* Responsive */
+      @media (max-width: 1024px) {
+        .content-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .header {
+          padding: 16px 20px;
+        }
+
+        .container {
+          padding: 24px 20px;
+        }
+
+        .user-info {
+          display: none;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .welcome-section h1 {
+          font-size: 28px;
+        }
+
+        .header-actions {
+          gap: 8px;
+        }
+
+        .btn {
+          padding: 10px 16px;
+          font-size: 13px;
+        }
+
+        .news-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">BA</div>
+        <span>BizAnalyzer</span>
+      </div>
+      <div class="header-actions">
+        <div class="user-info" id="userInfo">
+          <div class="user-avatar" id="userAvatar"></div>
+          <div class="user-details">
+            <div class="user-name" id="userName">Loading...</div>
+            <div class="user-email" id="userEmail"></div>
+          </div>
+        </div>
+        <a href="index123.html" class="btn btn-primary">New Analysis</a>
+        <button class="btn btn-secondary" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+      <div class="welcome-section">
+        <h1>Welcome back, <span id="welcomeName">User</span>!</h1>
+        <p>Here's what's happening with your business analyses</p>
+      </div>
+
+      <!-- Stats Container -->
+      <div class="stats-container">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="statAnalyses">0</div>
+            <div class="stat-label">Total Analyses</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statCompetitors">0</div>
+            <div class="stat-label">Competitors Tracked</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statNews">0</div>
+            <div class="stat-label">Relevant Articles</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statTypes">0</div>
+            <div class="stat-label">Business Types</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content Grid -->
+      <div class="content-grid">
+        <!-- News Section -->
+        <div class="news-section">
+          <h2 class="section-title">Industry News & Insights</h2>
+          <div id="newsContainer">
+            <div class="loading">
+              <div class="spinner"></div>
+              <p>Loading personalized news...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Analyses -->
+        <div class="recent-section">
+          <h2 class="section-title">Recent Analyses</h2>
+          <div id="analysesContainer">
+            <div class="loading">
+              <div class="spinner"></div>
+              <p>Loading analyses...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Check authentication
+      async function checkAuth() {
+        try {
+          const res = await fetch("/current_user", {
+            credentials: "same-origin",
+            headers: {
+              Accept: "application/json",
+            },
+          });
+
+          const contentType = res.headers.get("content-type");
+          if (!contentType || !contentType.includes("application/json")) {
+            console.error("Server returned non-JSON response");
+            window.location.href = "login.html";
+            return null;
+          }
+
+          const data = await res.json();
+
+          if (!data.ok || !data.user) {
+            window.location.href = "login.html";
+            return null;
+          }
+
+          return data.user;
+        } catch (err) {
+          console.error("Auth check failed:", err);
+          window.location.href = "login.html";
+          return null;
+        }
+      }
+
+      // Load user targets
+      async function loadTargets() {
+        try {
+          const res = await fetch("/targets", { credentials: "same-origin" });
+          const data = await res.json();
+
+          if (!data.ok) {
+            throw new Error(data.error || "Failed to load targets");
+          }
+
+          return data.targets || [];
+        } catch (err) {
+          console.error("Failed to load targets:", err);
+          return [];
+        }
+      }
+
+      // Extract business types from targets
+      function extractBusinessTypes(targets) {
+        const types = new Set();
+        targets.forEach((t) => {
+          if (t.business_type) {
+            types.add(t.business_type.toLowerCase());
+          }
+        });
+        return Array.from(types);
+      }
+
+      // Fetch news from backend /news endpoint
+      async function fetchNews() {
+        try {
+          const res = await fetch("/news", {
+            credentials: "same-origin",
+            headers: {
+              Accept: "application/json",
+            },
+          });
+
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          }
+
+          const data = await res.json();
+
+          if (data.status === "error") {
+            throw new Error(data.error || "Failed to fetch news");
+          }
+
+          return data.results || [];
+        } catch (err) {
+          console.error("Failed to fetch news:", err);
+          throw err;
+        }
+      }
+
+      // Format date for display
+      function formatDate(dateString) {
+        if (!dateString) return "Recent";
+        try {
+          const date = new Date(dateString);
+          const now = new Date();
+          const diffMs = now - date;
+          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+          if (diffDays === 0) return "Today";
+          if (diffDays === 1) return "Yesterday";
+          if (diffDays < 7) return `${diffDays} days ago`;
+
+          return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year:
+              date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+          });
+        } catch (e) {
+          return dateString;
+        }
+      }
+
+      // Render news articles
+      function renderNews(articles) {
+        const container = document.getElementById("newsContainer");
+
+        if (!articles || articles.length === 0) {
+          container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📰</div>
+            <p>No news articles yet. Create your first analysis to see personalized industry news!</p>
+          </div>
+        `;
+          return;
+        }
+
+        const html = `
+        <div class="news-grid">
+          ${articles
+            .map(
+              (article) => `
+            <div class="news-item" onclick="window.open('${
+              article.link
+            }', '_blank')">
+              ${
+                article.image_url
+                  ? `<img src="${article.image_url}" alt="${
+                      article.title || "News"
+                    }" class="news-image" onerror="this.style.display='none'">`
+                  : `<div class="news-image"></div>`
+              }
+              <div class="news-content">
+                ${
+                  article.category && article.category.length > 0
+                    ? `<div class="news-category">${
+                        Array.isArray(article.category)
+                          ? article.category[0]
+                          : article.category
+                      }</div>`
+                    : ""
+                }
+                <h3 class="news-title">${article.title || "Untitled"}</h3>
+                ${
+                  article.description
+                    ? `<p class="news-excerpt">${article.description}</p>`
+                    : ""
+                }
+                <div class="news-meta">
+                  <span class="news-source">${
+                    article.source_name || "Unknown Source"
+                  }</span>
+                  <span>${formatDate(article.pubDate)}</span>
+                </div>
+              </div>
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+      `;
+
+        container.innerHTML = html;
+      }
+
+      // Render error state for news
+      function renderNewsError(error) {
+        const container = document.getElementById("newsContainer");
+        container.innerHTML = `
+          <div class="error-state">
+            <p><strong>⚠️ Unable to load news</strong></p>
+            <p style="margin-top: 8px; font-size: 14px;">${
+              error.message || "Please try again later"
+            }</p>
+          </div>
+        `;
+      }
+
+      // Render recent analyses
+      function renderAnalyses(targets) {
+        const container = document.getElementById("analysesContainer");
+
+        if (!targets || targets.length === 0) {
+          container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <p>No analyses yet. Start your first location analysis!</p>
+            <a href="index123.html" class="btn btn-primary" style="margin-top: 16px;">
+              Create Analysis
+            </a>
+          </div>
+        `;
+          return;
+        }
+
+        const recentTargets = targets.slice(0, 5);
+        const html = `
+        <div class="analysis-list">
+          ${recentTargets
+            .map(
+              (target) => `
+            <div class="analysis-item" onclick="viewAnalysis(${target.id})">
+              <div class="analysis-type">${
+                target.business_type || "Unknown"
+              }</div>
+              <div class="analysis-location">${
+                target.name || "Unnamed Location"
+              }</div>
+              <div class="analysis-date">
+                ${target.latitude?.toFixed(4)}, ${target.longitude?.toFixed(
+                4
+              )} • 
+                ${new Date(target.created_at).toLocaleDateString()}
+              </div>
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+      `;
+
+        container.innerHTML = html;
+      }
+
+      // View analysis details
+      function viewAnalysis(targetId) {
+        window.location.href = `index123.html?target=${targetId}`;
+      }
+
+      // Update stats
+      function updateStats(targets, newsCount) {
+        const businessTypes = extractBusinessTypes(targets);
+        const totalCompetitors = targets.reduce(
+          (sum, t) => sum + (t.competitor_count || 0),
+          0
+        );
+
+        document.getElementById("statAnalyses").textContent = targets.length;
+        document.getElementById("statCompetitors").textContent =
+          totalCompetitors;
+        document.getElementById("statTypes").textContent = businessTypes.length;
+        document.getElementById("statNews").textContent = newsCount;
+      }
+
+      // Logout
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", async () => {
+          try {
+            await fetch("/logout", {
+              method: "POST",
+              credentials: "same-origin",
+            });
+            window.location.href = "login.html";
+          } catch (err) {
+            console.error("Logout failed:", err);
+            alert("Logout failed. Please try again.");
+          }
+        });
+
+      // Initialize
+      async function init() {
+        const user = await checkAuth();
+        if (!user) return;
+
+        // Update user info
+        document.getElementById("userName").textContent =
+          user.full_name || user.email;
+        document.getElementById("userEmail").textContent = user.email;
+        document.getElementById("welcomeName").textContent =
+          user.full_name?.split(" ")[0] || "User";
+
+        // Get user initials for avatar
+        const initials = (user.full_name || user.email)
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2);
+        document.getElementById("userAvatar").textContent = initials;
+
+        // Load targets
+        const targets = await loadTargets();
+
+        // Render recent analyses
+        renderAnalyses(targets);
+
+        // Load and render news from backend
+        try {
+          const news = await fetchNews();
+          updateStats(targets, news.length);
+          renderNews(news);
+        } catch (error) {
+          console.error("Failed to load news:", error);
+          updateStats(targets, 0);
+          renderNewsError(error);
+        }
+      }
+
+      // Start
+      init();
+    </script>
+  </body>
+</html>

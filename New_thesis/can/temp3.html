@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Population Dashboard + Text Generation • Unified</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        /* Chat UI / Dark palette */
+        --bg: #0b1020;
+        --panel: #0f172a;
+        --card: #111827;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --border: #1f2937;
+        --accent: #60a5fa;
+        --accent-2: #22d3ee;
+        --blue-200: #93c5fd;
+        --pink-200: #f9a8d4;
+        --shadow: 0 10px 20px rgba(2, 6, 23, 0.35),
+          0 2px 6px rgba(2, 6, 23, 0.25);
+      }
+      .light {
+        --bg: #f6f7fb;
+        --panel: #ffffff;
+        --card: #ffffff;
+        --text: #111827;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --accent: #2563eb;
+        --accent-2: #06b6d4;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, Segoe UI, Roboto, Apple Color Emoji,
+          Segoe UI Emoji;
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: linear-gradient(
+          180deg,
+          rgba(2, 6, 23, 0.9),
+          rgba(2, 6, 23, 0.4)
+        );
+        backdrop-filter: saturate(120%) blur(8px);
+        border-bottom: 1px solid var(--border);
+      }
+      .row {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .title {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 10px var(--accent);
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        color: var(--muted);
+      }
+      .btn,
+      select,
+      input[type="text"],
+      textarea {
+        border: 1px solid var(--border);
+        background: #0b1222;
+        color: var(--text);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+      .btn {
+        cursor: pointer;
+      }
+      .btn.primary {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        color: #0b1020;
+        border: none;
+      }
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 14px;
+      }
+      @media (max-width: 1100px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Left: Population */
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: var(--shadow);
+      }
+      .left .grid {
+        display: grid;
+        gap: 14px;
+      }
+      .left .stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      @media (max-width: 900px) {
+        .left .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 520px) {
+        .left .stats {
+          grid-template-columns: 1fr;
+        }
+      }
+      .label {
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .value {
+        font-size: 26px;
+        font-weight: 700;
+        margin-top: 6px;
+      }
+      .sub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      #brgyList label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--panel);
+      }
+      #brgyList label:hover {
+        background: #0c162b;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+        text-align: right;
+      }
+      th:first-child,
+      td:first-child {
+        text-align: left;
+      }
+
+      .charts {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 14px;
+      }
+      @media (max-width: 1000px) {
+        .charts {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Right: Chat */
+      .chat {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow: auto;
+        max-height: 560px;
+      }
+      .msg {
+        display: grid;
+        grid-template-columns: 36px 1fr;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+      }
+      .msg.user {
+        background: #1e293b;
+      }
+      .msg.assistant {
+        background: #0b1222;
+      }
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #111c35;
+        color: #cbd5e1;
+        font-weight: 700;
+      }
+      .content {
+        white-space: pre-wrap;
+        line-height: 1.6;
+      }
+      .streaming .cursor {
+        display: inline-block;
+        width: 8px;
+        height: 1.15em;
+        vertical-align: -0.2em;
+        background: linear-gradient(90deg, var(--accent), transparent);
+        animation: blink 1s steps(1, end) infinite;
+        margin-left: 2px;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      .compose {
+        display: grid;
+        gap: 8px;
+      }
+      .compose .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="row">
+        <div class="title">
+          <span class="dot"></span><strong>Population + Text Gen</strong
+          ><span class="muted" style="font-weight: 500">• mock</span>
+        </div>
+        <div class="controls">
+          <label style="display: flex; align-items: center; gap: 8px"
+            ><input type="checkbox" id="toggleTheme" />
+            <span class="muted">Light mode</span></label
+          >
+          <button class="btn" id="btnSelectAll">Select All</button>
+          <button class="btn" id="btnClear">Clear</button>
+          <span class="muted" id="selCount">0 selected</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- LEFT: POPULATION DASHBOARD -->
+      <section class="left">
+        <div class="card" style="position: sticky; top: 76px">
+          <div class="label" style="margin-bottom: 8px">Barangays</div>
+          <div
+            id="brgyList"
+            style="display: grid; gap: 8px; max-height: 180px; overflow: auto"
+          ></div>
+
+          <div class="grid stats" style="margin-top: 12px">
+            <div class="card">
+              <div class="label">Total Population</div>
+              <div class="value" id="statTotal">—</div>
+              <div class="sub">Aggregated from selected</div>
+            </div>
+            <div class="card">
+              <div class="label">Male</div>
+              <div class="value" id="statMale">—</div>
+              <div class="sub" id="statMalePct">—</div>
+            </div>
+            <div class="card">
+              <div class="label">Female</div>
+              <div class="value" id="statFemale">—</div>
+              <div class="sub" id="statFemalePct">—</div>
+            </div>
+          </div>
+
+          <div class="charts" style="margin-top: 12px">
+            <div class="card">
+              <div class="label" style="margin-bottom: 8px">
+                Age Groups by Sex
+              </div>
+              <div style="height: 300px"><canvas id="barAge"></canvas></div>
+            </div>
+            <div class="card">
+              <div class="label" style="margin-bottom: 8px">Gender Split</div>
+              <div style="height: 300px; display: flex; align-items: center">
+                <canvas id="pieGender"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 12px">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 8px;
+              "
+            >
+              <div class="label">Selected Barangays — Breakdown</div>
+              <div style="display: flex; gap: 8px">
+                <button class="btn" id="exportCsv">Export Selected CSV</button
+                ><button class="btn" id="exportCsvTotals">
+                  Export Totals CSV
+                </button>
+              </div>
+            </div>
+            <div style="overflow: auto; max-height: 220px">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="text-align: left">Barangay</th>
+                    <th>Total</th>
+                    <th>Male</th>
+                    <th>Female</th>
+                    <th>Children</th>
+                    <th>Teens</th>
+                    <th>Young Adults</th>
+                    <th>Adults</th>
+                    <th>Seniors</th>
+                  </tr>
+                </thead>
+                <tbody id="tblBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              gap: 8px;
+              justify-content: flex-end;
+              margin-top: 12px;
+            "
+          >
+            <button class="btn" id="btnPreview">Preview Input</button>
+            <button class="btn primary" id="btnAnalyze">
+              Analyze → Send to Chat
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: CHAT UI -->
+      <section class="right">
+        <div class="card">
+          <div class="label" style="margin-bottom: 6px">
+            Text Generation (mock streaming)
+          </div>
+          <div
+            id="chat"
+            class="chat"
+            aria-live="polite"
+            aria-label="Conversation"
+          ></div>
+          <div class="compose" style="margin-top: 10px">
+            <div class="row">
+              <textarea
+                id="prompt"
+                placeholder="Add extra instructions… e.g., summarize key risks and recommendations"
+              ></textarea
+              ><button id="sendBtn" class="btn primary">Generate</button>
+            </div>
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                color: var(--muted);
+                font-size: 12px;
+              "
+            >
+              <span>Speed</span>
+              <input type="range" id="speed" min="10" max="120" value="40" />
+              <button class="btn" id="stopBtn" disabled>Stop</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // =========== Backend configuration ===========
+      // Change this to your running backend (e.g. https://my-backend.example.com)
+      const BACKEND_URL = "http://localhost:5000";
+
+      // Default municipality while Maps integration is not present
+      const DEFAULT_MUNICIPALITY = "Las Pinas";
+
+      // Helper: tolerant field getter (works with snake_case or CamelCase)
+      function fget(obj, candidates, fallback = null) {
+        for (const c of candidates) {
+          if (obj.hasOwnProperty(c)) return obj[c];
+        }
+        // try lowercase keys
+        const lower = Object.keys(obj).reduce((acc, k) => {
+          acc[k.toLowerCase()] = obj[k];
+          return acc;
+        }, {});
+        for (const c of candidates) {
+          if (lower.hasOwnProperty(c.toLowerCase()))
+            return lower[c.toLowerCase()];
+        }
+        return fallback;
+      }
+
+      // Convert backend row to the UI record shape expected by the page
+      function rowToRecord(row) {
+        // field candidates: prefer normalized names if present
+        const region = fget(row, ["Region", "region", "region_name"], "");
+        const province = fget(row, ["Province", "province"], "");
+        const municipality = fget(
+          row,
+          ["Municipality", "municipality", "mun"],
+          DEFAULT_MUNICIPALITY
+        );
+        const barangay = fget(
+          row,
+          ["Barangay", "barangay", "brgy", "barangay_name"],
+          "Unknown"
+        );
+
+        // numeric fields (try multiple candidate names)
+        const Total_MF =
+          Number(fget(row, ["Total_MF", "total_mf", "totalmf", "total"]), 10) ||
+          0;
+        const Total_M =
+          Number(fget(row, ["Total_M", "total_m", "totalm", "male"]), 10) || 0;
+        const Total_F =
+          Number(fget(row, ["Total_F", "total_f", "totalf", "female"]), 10) ||
+          0;
+
+        const Child_M =
+          Number(
+            fget(row, [
+              "Child_M",
+              "child_m",
+              "childm",
+              "child_male",
+              "child_male_count",
+            ]),
+            10
+          ) || 0;
+        const Child_F =
+          Number(
+            fget(row, [
+              "Child_F",
+              "child_f",
+              "childf",
+              "child_female",
+              "child_female_count",
+            ]),
+            10
+          ) || 0;
+        const Teen_M =
+          Number(fget(row, ["Teen_M", "teen_m", "teenm", "teen_male"]), 10) ||
+          0;
+        const Teen_F =
+          Number(fget(row, ["Teen_F", "teen_f", "teenf", "teen_female"]), 10) ||
+          0;
+        const YoungAdult_M =
+          Number(
+            fget(row, [
+              "YoungAdult_M",
+              "youngadult_m",
+              "youngadultm",
+              "young_male",
+            ]),
+            10
+          ) || 0;
+        const YoungAdult_F =
+          Number(
+            fget(row, [
+              "YoungAdult_F",
+              "youngadult_f",
+              "youngadultf",
+              "young_female",
+            ]),
+            10
+          ) || 0;
+        const Adult_M =
+          Number(fget(row, ["Adult_M", "adult_m", "adultm"]), 10) || 0;
+        const Adult_F =
+          Number(fget(row, ["Adult_F", "adult_f", "adultf"]), 10) || 0;
+        const Senior_M =
+          Number(fget(row, ["Senior_M", "senior_m", "seniorm"]), 10) || 0;
+        const Senior_F =
+          Number(fget(row, ["Senior_F", "senior_f", "seniorf"]), 10) || 0;
+
+        // aggregated M+F fields (if backend already provides)
+        const Child_MF =
+          Number(
+            fget(row, ["Child_MF", "child_mf", "childmf", "children_total"]),
+            10
+          ) || Child_M + Child_F;
+        const Teen_MF =
+          Number(
+            fget(row, ["Teen_MF", "teen_mf", "teenmf", "teen_total"]),
+            10
+          ) || Teen_M + Teen_F;
+        const YoungAdult_MF =
+          Number(
+            fget(row, ["YoungAdult_MF", "youngadult_mf", "youngadultmf"]),
+            10
+          ) || YoungAdult_M + YoungAdult_F;
+        const Adult_MF =
+          Number(fget(row, ["Adult_MF", "adult_mf", "adultmf"]), 10) ||
+          Adult_M + Adult_F;
+        const Senior_MF =
+          Number(fget(row, ["Senior_MF", "senior_mf", "seniormf"]), 10) ||
+          Senior_M + Senior_F;
+
+        // created_at or timestamp
+        const created_at = fget(row, [
+          "created_at",
+          "createdat",
+          "timestamp",
+          "date",
+        ]);
+
+        return {
+          Region: region,
+          Province: province,
+          Municipality: municipality,
+          Barangay: barangay,
+          Total_MF,
+          Total_M,
+          Total_F,
+          Child_M,
+          Child_F,
+          Teen_M,
+          Teen_F,
+          YoungAdult_M,
+          YoungAdult_F,
+          Adult_M,
+          Adult_F,
+          Senior_M,
+          Senior_F,
+          Child_MF,
+          Teen_MF,
+          YoungAdult_MF,
+          Adult_MF,
+          Senior_MF,
+          created_at,
+        };
+      }
+
+      // Fetch demographics for a municipality (GET /demographics?municipality=...)
+      async function fetchDemographics(municipality = DEFAULT_MUNICIPALITY) {
+        try {
+          const q = encodeURIComponent(municipality);
+          const resp = await fetch(
+            `${BACKEND_URL}/demographics?municipality=${q}`,
+            { method: "GET" }
+          );
+          if (!resp.ok) {
+            const t = await resp.text().catch(() => null);
+            console.warn("Failed to fetch demographics:", resp.status, t);
+            throw new Error("Failed to fetch demographics from backend");
+          }
+          const j = await resp.json();
+          // expected shape: { municipality: 'Las Pinas', rows: [ {...}, ... ] }
+          const rows = Array.isArray(j.rows) ? j.rows : [];
+          return rows.map(rowToRecord);
+        } catch (err) {
+          console.error("fetchDemographics error", err);
+          return null;
+        }
+      }
+
+      // POST integration endpoint (example)
+      async function postMunicipality(municipality = DEFAULT_MUNICIPALITY) {
+        try {
+          const resp = await fetch(`${BACKEND_URL}/integration`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ municipality }),
+          });
+          if (!resp.ok) {
+            throw new Error(`Integration POST failed ${resp.status}`);
+          }
+          const json = await resp.json();
+          const rows = Array.isArray(json.rows) ? json.rows : [];
+          return rows.map(rowToRecord);
+        } catch (err) {
+          console.error("postMunicipality error", err);
+          return null;
+        }
+      }
+
+      // ====== The rest of your original UI code adapted to use fetched data ======
+      // Original UI helpers (chart, table, exporter, stream, etc) are reused.
+      // We'll keep most of original code but populate MOCK from backend.
+
+      // keep a small local fallback in case fetch fails (a tiny subset)
+      const LOCAL_FALLBACK = {
+        "Talon Dos": {
+          Region: "NCR",
+          Province: "Metro Manila",
+          Municipality: "Las Piñas",
+          Barangay: "Talon Dos",
+          Total_MF: 27450,
+          Total_M: 13420,
+          Total_F: 14030,
+          Child_M: 2700,
+          Child_F: 2600,
+          Teen_M: 2400,
+          Teen_F: 2500,
+          YoungAdult_M: 3200,
+          YoungAdult_F: 3450,
+          Adult_M: 3900,
+          Adult_F: 4200,
+          Senior_M: 1220,
+          Senior_F: 1280,
+          Child_MF: 5300,
+          Teen_MF: 4900,
+          YoungAdult_MF: 6650,
+          Adult_MF: 8100,
+          Senior_MF: 2500,
+          created_at: "2025-10-07T00:00:00Z",
+        },
+      };
+
+      // -- UI code (kept from original file) --
+      const ageLabels = [
+        "Children (0–12)",
+        "Teens (13–19)",
+        "Young Adults (20–34)",
+        "Adults (35–59)",
+        "Seniors (60+)",
+      ];
+      const nf = (n) =>
+        (n ?? "—").toLocaleString ? n.toLocaleString("en-US") : n;
+
+      const app = document.body; // theme
+      const toggleTheme = document.getElementById("toggleTheme");
+      toggleTheme.addEventListener("change", () => {
+        if (toggleTheme.checked) app.classList.add("light");
+        else app.classList.remove("light");
+      });
+
+      // UI state
+      let MOCK = LOCAL_FALLBACK;
+      const brgyList = document.getElementById("brgyList");
+      let selected = new Set(Object.keys(MOCK)); // will be replaced after load
+
+      // render checkboxes, table, charts, export — reuse original functions, but
+      // we need to ensure they reference the (possibly updated) MOCK variable.
+      function renderCheckboxes() {
+        brgyList.innerHTML = "";
+        Object.keys(MOCK).forEach((k) => {
+          const id = "cb-" + k.replace(/\W+/g, "-");
+          const row = document.createElement("label");
+          row.innerHTML = `<input type="checkbox" id="${id}"><span>${k}</span>`;
+          const cb = row.querySelector("input");
+          cb.checked = selected.has(k);
+          cb.addEventListener("change", () => {
+            if (cb.checked) selected.add(k);
+            else selected.delete(k);
+            updateUI();
+          });
+          brgyList.appendChild(row);
+        });
+      }
+      document.getElementById("btnSelectAll").onclick = () => {
+        Object.keys(MOCK).forEach((k) => selected.add(k));
+        renderCheckboxes();
+        updateUI();
+      };
+      document.getElementById("btnClear").onclick = () => {
+        selected.clear();
+        renderCheckboxes();
+        updateUI();
+      };
+
+      function sumFields(records, fields) {
+        const acc = {};
+        fields.forEach((f) => (acc[f] = 0));
+        records.forEach((r) =>
+          fields.forEach((f) => (acc[f] += Number(r[f] || 0)))
+        );
+        return acc;
+      }
+      function aggregate(keys) {
+        const recs = keys.map((k) => MOCK[k]);
+        if (!recs.length) return null;
+        const numeric = [
+          "Total_MF",
+          "Total_M",
+          "Total_F",
+          "Child_M",
+          "Child_F",
+          "Teen_M",
+          "Teen_F",
+          "YoungAdult_M",
+          "YoungAdult_F",
+          "Adult_M",
+          "Adult_F",
+          "Senior_M",
+          "Senior_F",
+          "Child_MF",
+          "Teen_MF",
+          "YoungAdult_MF",
+          "Adult_MF",
+          "Senior_MF",
+        ];
+        const sums = sumFields(recs, numeric);
+        return { ...recs[0], ...sums, Barangay: `${recs.length} selected` };
+      }
+
+      function renderTable(keys) {
+        const tbody = document.getElementById("tblBody");
+        tbody.innerHTML = "";
+        keys.forEach((k) => {
+          const r = MOCK[k];
+          const tr = document.createElement("tr");
+          const cells = [
+            r.Barangay,
+            r.Total_MF,
+            r.Total_M,
+            r.Total_F,
+            r.Child_MF,
+            r.Teen_MF,
+            r.YoungAdult_MF,
+            r.Adult_MF,
+            r.Senior_MF,
+          ];
+          cells.forEach((v, i) => {
+            const td = document.createElement("td");
+            td.style.textAlign = i === 0 ? "left" : "right";
+            td.textContent = i === 0 ? v : nf(v);
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+      }
+
+      let barChart, pieChart;
+      function buildCharts(rec) {
+        if (barChart) barChart.destroy();
+        if (pieChart) pieChart.destroy();
+        const male = [
+          rec.Child_M,
+          rec.Teen_M,
+          rec.YoungAdult_M,
+          rec.Adult_M,
+          rec.Senior_M,
+        ];
+        const female = [
+          rec.Child_F,
+          rec.Teen_F,
+          rec.YoungAdult_F,
+          rec.Adult_F,
+          rec.Senior_F,
+        ];
+        barChart = new Chart(document.getElementById("barAge"), {
+          type: "bar",
+          data: {
+            labels: ageLabels,
+            datasets: [
+              { label: "Male", data: male },
+              { label: "Female", data: female },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { x: { stacked: true }, y: { stacked: true } },
+          },
+        });
+        pieChart = new Chart(document.getElementById("pieGender"), {
+          type: "doughnut",
+          data: {
+            labels: ["Male", "Female"],
+            datasets: [{ data: [rec.Total_M, rec.Total_F] }],
+          },
+          options: { responsive: true, cutout: "58%" },
+        });
+      }
+
+      function renderStats(rec) {
+        document.getElementById("statTotal").textContent = nf(rec.Total_MF);
+        document.getElementById("statMale").textContent = nf(rec.Total_M);
+        document.getElementById("statFemale").textContent = nf(rec.Total_F);
+        const malePct =
+          rec.Total_M && rec.Total_MF
+            ? ((rec.Total_M / rec.Total_MF) * 100).toFixed(1)
+            : "-";
+        const femalePct =
+          rec.Total_F && rec.Total_MF
+            ? ((rec.Total_F / rec.Total_MF) * 100).toFixed(1)
+            : "-";
+        document.getElementById("statMalePct").textContent = `${malePct}%`;
+        document.getElementById("statFemalePct").textContent = `${femalePct}%`;
+      }
+
+      function exportCSVSelected(keys) {
+        const header = [
+          "Barangay",
+          "Total_MF",
+          "Total_M",
+          "Total_F",
+          "Child_MF",
+          "Teen_MF",
+          "YoungAdult_MF",
+          "Adult_MF",
+          "Senior_MF",
+        ];
+        const rows = [header];
+        keys.forEach((k) => {
+          const r = MOCK[k];
+          rows.push([
+            r.Barangay,
+            r.Total_MF,
+            r.Total_M,
+            r.Total_F,
+            r.Child_MF,
+            r.Teen_MF,
+            r.YoungAdult_MF,
+            r.Adult_MF,
+            r.Senior_MF,
+          ]);
+        });
+        const csv = rows
+          .map((r) => r.map((x) => (x == null ? "" : String(x))).join(","))
+          .join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "selected_barangays.csv";
+        a.click();
+      }
+      function exportCSVTotals(rec) {
+        const header = [
+          "Total_MF",
+          "Total_M",
+          "Total_F",
+          "Child_MF",
+          "Teen_MF",
+          "YoungAdult_MF",
+          "Adult_MF",
+          "Senior_MF",
+        ];
+        const rows = [
+          header,
+          [
+            rec.Total_MF,
+            rec.Total_M,
+            rec.Total_F,
+            rec.Child_MF,
+            rec.Teen_MF,
+            rec.YoungAdult_MF,
+            rec.Adult_MF,
+            rec.Senior_MF,
+          ],
+        ];
+        const csv = rows
+          .map((r) => r.map((x) => (x == null ? "" : String(x))).join(","))
+          .join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "selected_totals.csv";
+        a.click();
+      }
+
+      document.getElementById("exportCsv").onclick = () =>
+        exportCSVSelected(Array.from(selected));
+      document.getElementById("exportCsvTotals").onclick = () => {
+        const agg = aggregate(Array.from(selected));
+        if (agg) exportCSVTotals(agg);
+      };
+
+      function updateUI() {
+        document.getElementById(
+          "selCount"
+        ).textContent = `${selected.size} selected`;
+        const keys = selected.size ? Array.from(selected) : Object.keys(MOCK);
+        const agg = aggregate(keys);
+        if (!agg) return;
+        renderStats(agg);
+        buildCharts(agg);
+        renderTable(keys);
+      }
+
+      // ----- Chat & streaming (original code) -----
+      const chat = document.getElementById("chat");
+      const promptEl = document.getElementById("prompt");
+      const sendBtn = document.getElementById("sendBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const speedEl = document.getElementById("speed");
+      let abortCurrent = null;
+      function el(tag, cls) {
+        const n = document.createElement(tag);
+        if (cls) n.className = cls;
+        return n;
+      }
+      function addMessage(role, html) {
+        const wrap = el("div", "msg " + role);
+        const avatar = el("div", "avatar");
+        avatar.textContent = role === "user" ? "U" : "A";
+        const content = el("div", "content");
+        content.innerHTML = html || "";
+        wrap.appendChild(avatar);
+        wrap.appendChild(content);
+        chat.appendChild(wrap);
+        chat.scrollTop = chat.scrollHeight;
+        return content;
+      }
+      function tokenize(text) {
+        return text.match(/\S+\s*/g) || [];
+      }
+      async function streamTo(node, text) {
+        const tokens = tokenize(text);
+        node.classList.add("streaming");
+        let stopped = false;
+        const cursor = el("span", "cursor");
+        node.appendChild(cursor);
+        abortCurrent = () => {
+          stopped = true;
+        };
+        stopBtn.disabled = false;
+        for (let i = 0; i < tokens.length; i++) {
+          if (stopped) break;
+          cursor.insertAdjacentText("beforebegin", tokens[i]);
+          chat.scrollTop = chat.scrollHeight;
+          await wait(msPerToken());
+        }
+        cursor.remove();
+        node.classList.remove("streaming");
+        stopBtn.disabled = true;
+        abortCurrent = null;
+      }
+      function msPerToken() {
+        const v = Number(speedEl.value || 40);
+        const mapped = 130 - v;
+        return Math.max(15, mapped);
+      }
+      function wait(ms) {
+        return new Promise((res) => setTimeout(res, ms));
+      }
+      function onSend() {
+        const text = promptEl.value.trim();
+        if (!text) return;
+        addMessage("user", escapeHtml(text));
+        promptEl.value = "";
+        const node = addMessage("assistant", "");
+        const reply = `You said: "${text}"\n\n(This is mock until you hook a real LLM.)`;
+        streamTo(node, reply);
+      }
+      sendBtn.addEventListener("click", onSend);
+      stopBtn.addEventListener("click", () => {
+        if (abortCurrent) abortCurrent();
+      });
+      promptEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          onSend();
+        }
+      });
+      function escapeHtml(s) {
+        return s.replace(
+          /[&<>\"]/g,
+          (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])
+        );
+      }
+
+      // create analysis text
+      function buildAnalysis(keys, agg) {
+        const list = keys.join(", ");
+        const malePct =
+          agg.Total_M && agg.Total_MF
+            ? ((agg.Total_M / agg.Total_MF) * 100).toFixed(1)
+            : "-";
+        const femalePct =
+          agg.Total_F && agg.Total_MF
+            ? ((agg.Total_F / agg.Total_MF) * 100).toFixed(1)
+            : "-";
+        const parts = [
+          `Selected barangays: ${list}.`,
+          `Total population: ${nf(agg.Total_MF)} (Male ${nf(
+            agg.Total_M
+          )} • ${malePct}% | Female ${nf(agg.Total_F)} • ${femalePct}%).`,
+          `Age groups (M+F): Children ${nf(agg.Child_MF)}, Teens ${nf(
+            agg.Teen_MF
+          )}, Young Adults ${nf(agg.YoungAdult_MF)}, Adults ${nf(
+            agg.Adult_MF
+          )}, Seniors ${nf(agg.Senior_MF)}.`,
+        ];
+        return parts.join(" ");
+      }
+
+      // Preview input
+      document.getElementById("btnPreview").onclick = () => {
+        const keys = selected.size ? Array.from(selected) : Object.keys(MOCK);
+        const agg = aggregate(keys);
+        if (!agg) return;
+        const base = buildAnalysis(keys, agg);
+        promptEl.value = `${base}\n\nPlease provide a concise narrative summary and 3 recommendations.`;
+        promptEl.focus();
+      };
+
+      // Analyze -> mock stream
+      document.getElementById("btnAnalyze").onclick = () => {
+        const keys = selected.size ? Array.from(selected) : Object.keys(MOCK);
+        const agg = aggregate(keys);
+        if (!agg) return;
+        const text = buildAnalysis(keys, agg) + "\n\nGenerating analysis…";
+        const node = addMessage("assistant", "");
+        streamTo(node, text);
+      };
+
+      // ===== initialization: load demographics from backend =====
+      async function init() {
+        // try GET endpoint
+        const rows = await fetchDemographics(DEFAULT_MUNICIPALITY);
+        if (rows && rows.length) {
+          // convert into MOCK keyed by barangay
+          const newMock = {};
+          rows.forEach((r) => {
+            const key =
+              r.Barangay || `Barangay ${Object.keys(newMock).length + 1}`;
+            newMock[key] = r;
+          });
+          MOCK = newMock;
+          selected = new Set(Object.keys(MOCK)); // default select all
+          renderCheckboxes();
+          updateUI();
+          console.log(
+            `Loaded ${
+              Object.keys(MOCK).length
+            } barangays from backend for ${DEFAULT_MUNICIPALITY}`
+          );
+          return;
+        }
+
+        // fallback: try POST /integration
+        const postRows = await postMunicipality(DEFAULT_MUNICIPALITY);
+        if (postRows && postRows.length) {
+          const newMock = {};
+          postRows.forEach((r) => {
+            const key =
+              r.Barangay || `Barangay ${Object.keys(newMock).length + 1}`;
+            newMock[key] = r;
+          });
+          MOCK = newMock;
+          selected = new Set(Object.keys(MOCK));
+          renderCheckboxes();
+          updateUI();
+          console.log(
+            `Loaded ${
+              Object.keys(MOCK).length
+            } barangays from POST /integration for ${DEFAULT_MUNICIPALITY}`
+          );
+          return;
+        }
+
+        // final fallback: use local fallback and initialize UI
+        MOCK = LOCAL_FALLBACK;
+        selected = new Set(Object.keys(MOCK));
+        renderCheckboxes();
+        updateUI();
+        console.warn(
+          "Using local fallback MOCK data — backend did not respond or returned no rows."
+        );
+      }
+
+      // run init when page loads
+      init();
+    </script>
+    <!-- Drawer: No horizontal scroll, full view on open -->
+    <!-- Drawer: No horizontal scroll, full view on open -->
+    <style>
+      /* prevent page horizontal scroll always */
+      html,
+      body {
+        overflow-x: hidden;
+      }
+
+      /* Drawer base */
+      .__drawer {
+        position: fixed;
+        top: 14px;
+        right: 14px;
+        width: 420px;
+        max-width: calc(100% - 28px);
+        height: calc(100% - 28px);
+        border-radius: 12px;
+        overflow: hidden; /* avoid internal horizontal scroll */
+        background: rgba(6, 8, 15, 0.98);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+        transition: transform 280ms cubic-bezier(0.2, 0.9, 0.25, 1),
+          right 220ms ease;
+        transform: translateX(calc(100% + 28px)); /* hidden by default */
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+        will-change: transform;
+      }
+
+      /* When opened: fully visible, overlays map. */
+      .__drawer.open {
+        transform: translateX(0);
+        right: 14px;
+      }
+
+      /* Drawer body scrolls vertically only */
+      .__drawer_body {
+        padding: 12px;
+        overflow-y: auto;
+        overflow-x: hidden; /* crucial: disable horizontal scroll inside */
+        -webkit-overflow-scrolling: touch;
+        box-sizing: border-box;
+        white-space: normal; /* ensure long text wraps instead of forcing width */
+      }
+
+      /* Responsive: bottom sheet on small widths (still no horizontal scroll) */
+      @media (max-width: 900px) {
+        .__drawer {
+          left: 8px;
+          right: 8px;
+          bottom: 12px;
+          top: auto;
+          height: 72vh;
+          transform: translateY(calc(100% + 28px));
+          border-radius: 12px 12px 6px 6px;
+        }
+        .__drawer.open {
+          transform: translateY(0);
+        }
+      }
+    </style>
+
+    <script>
+      (function () {
+        // Wait for DOM
+        document.addEventListener("DOMContentLoaded", () => {
+          const drawer = document.getElementById("__slidingDrawer");
+          const fab = document.getElementById("__drawerFab");
+          const closeBtn = document.getElementById("__closeDrawerBtn");
+
+          if (!drawer || !fab) return;
+
+          // Keep references to previous page overflow so we can restore it
+          let prevHtmlOverflow = document.documentElement.style.overflow || "";
+          let prevBodyOverflow = document.body.style.overflow || "";
+
+          function openDrawer() {
+            // Show drawer
+            drawer.classList.add("open");
+            fab.textContent = "Close panel";
+            fab.setAttribute("aria-expanded", "true");
+
+            // Disable page scrolling to avoid horizontal layout shifts.
+            // We only set overflow hidden while drawer is open.
+            prevHtmlOverflow = document.documentElement.style.overflow || "";
+            prevBodyOverflow = document.body.style.overflow || "";
+            document.documentElement.style.overflow = "hidden";
+            document.body.style.overflow = "hidden";
+
+            // Force the drawer to repaint/lay out so internal elements wrap properly
+            // (helps prevent any transient horizontal overflow)
+            drawer.getBoundingClientRect();
+
+            // If you use Google Maps and notice map needs a resize call, do it here:
+            // if (window.google && window.google.maps && window.map) {
+            //   try { google.maps.event.trigger(window.map, 'resize'); }
+            //   catch(e) { /* ignore */ }
+            // }
+          }
+
+          function closeDrawer() {
+            drawer.classList.remove("open");
+            fab.textContent = "Open panel";
+            fab.setAttribute("aria-expanded", "false");
+
+            // Restore page scrolling
+            document.documentElement.style.overflow = prevHtmlOverflow;
+            document.body.style.overflow = prevBodyOverflow;
+          }
+
+          fab.addEventListener("click", () =>
+            drawer.classList.contains("open") ? closeDrawer() : openDrawer()
+          );
+          if (closeBtn) closeBtn.addEventListener("click", closeDrawer);
+
+          // If user clicks outside the drawer on wide screens, close it (keeps map access intuitive)
+          document.addEventListener("click", (ev) => {
+            if (!drawer.classList.contains("open")) return;
+            // if clicked inside drawer or on FAB, ignore
+            if (drawer.contains(ev.target) || fab.contains(ev.target)) return;
+            if (window.innerWidth > 900) closeDrawer();
+          });
+
+          // Optional: preserve focus and keyboard UX — close on ESC
+          document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && drawer.classList.contains("open"))
+              closeDrawer();
+          });
+
+          // Start closed (if you want it open by default, call openDrawer() here)
+          closeDrawer();
+        });
+      })();
+    </script>
+  </body>
+</html>

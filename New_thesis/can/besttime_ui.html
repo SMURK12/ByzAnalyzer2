@@ -1,0 +1,303 @@
+<!-- Save as besttime_ui.html (modified) -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>BestTime — Closest Venues (top 3)</title>
+    <style>
+      :root {
+        --bg: #f6f8fb;
+        --card: #ffffff;
+        --muted: #6b7280;
+        --accent: #0ea5a4;
+        --pad: 14px;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+          Roboto, "Helvetica Neue", Arial;
+      }
+      body {
+        background: var(--bg);
+        margin: 0;
+        padding: 24px;
+        color: #111827;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .card {
+        background: var(--card);
+        padding: var(--pad);
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+        margin-bottom: 16px;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      input[type="text"],
+      input[type="number"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #e6e9ef;
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      button {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #e6e9ef;
+        color: #0f172a;
+      }
+      pre {
+        background: #0f172a;
+        color: #e6f6f5;
+        padding: 12px;
+        border-radius: 8px;
+        overflow: auto;
+        max-height: 360px;
+      }
+      .venue {
+        border: 1px solid #eef2f7;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
+      @media (max-width: 640px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header style="margin-bottom: 14px">
+        <h1 style="margin: 0">BestTime — Closest venues (top 3)</h1>
+        <p style="margin: 4px 0 0; color: var(--muted)">
+          Enter a business type and coordinates; returns the 3 closest venues
+          that include foot-traffic forecasts.
+        </p>
+      </header>
+
+      <div class="card">
+        <label for="backendUrl">Backend base URL</label>
+        <input id="backendUrl" type="text" value="http://localhost:5000" />
+        <p class="small" style="margin: 6px 0 0; color: var(--muted)">
+          Change to your service host/port if needed.
+        </p>
+      </div>
+
+      <div class="card">
+        <label for="business_type">Business type (required)</label>
+        <input
+          id="business_type"
+          type="text"
+          placeholder='e.g. "coffee shop", "restaurant"'
+        />
+
+        <div class="row" style="margin-top: 10px">
+          <div>
+            <label for="lat">Latitude (required)</label>
+            <input id="lat" type="number" step="any" placeholder="14.5995" />
+          </div>
+          <div>
+            <label for="lng">Longitude (required)</label>
+            <input id="lng" type="number" step="any" placeholder="120.9842" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top: 10px">
+          <div>
+            <label for="radius">Radius (meters)</label>
+            <input id="radius" type="number" value="2000" />
+          </div>
+          <div>
+            <label for="top_n">Top N (max results to return)</label>
+            <input id="top_n" type="number" value="3" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btnFind">Find top venues</button>
+          <button class="secondary" id="btnUseGeo">Use current location</button>
+          <button class="secondary" id="btnClear">Clear</button>
+          <div
+            style="margin-left: auto; align-self: center; color: var(--muted)"
+          >
+            Shows closest venues with foot-traffic forecasts
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; gap: 12px; align-items: flex-start">
+          <div style="flex: 1">
+            <label>Top venues</label>
+            <div id="venuesList">— no results —</div>
+          </div>
+          <div style="flex: 1">
+            <label>Raw response</label>
+            <pre id="rawResponse">—</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const backendDefault = $("backendUrl").value;
+
+      function renderVenues(list) {
+        const wrap = $("venuesList");
+        if (!list || !list.length) {
+          wrap.innerHTML = "<div style='color:#6b7280'>— no results —</div>";
+          return;
+        }
+        wrap.innerHTML = "";
+        list.forEach((v, i) => {
+          const name = v.venue_name || v.name || "Unnamed venue";
+          const dist =
+            typeof v._distance_m === "number"
+              ? Math.round(v._distance_m) + " m"
+              : "n/a";
+          const avg =
+            typeof v._avg_day_mean === "number"
+              ? v._avg_day_mean.toFixed(2)
+              : "n/a";
+          const addr = v.venue_address || v.address || "";
+          const el = document.createElement("div");
+          el.className = "venue";
+          el.innerHTML = `<strong>${i + 1}. ${name}</strong>
+                          <div style="font-size:13px;color:#374151;margin-top:6px">
+                            <div>${addr}</div>
+                            <div>Distance: ${dist} · avg_day_mean: ${avg}</div>
+                          </div>`;
+          wrap.appendChild(el);
+        });
+      }
+
+      async function doFind() {
+        const backend = $("backendUrl").value.trim() || backendDefault;
+        const business_type = $("business_type").value.trim();
+        const latv = $("lat").value.trim();
+        const lngv = $("lng").value.trim();
+        const radius = parseInt($("radius").value || "2000", 10);
+        const top_n = parseInt($("top_n").value || "3", 10);
+
+        if (!business_type) {
+          alert("Please enter a business type.");
+          return;
+        }
+        if (!latv || !lngv) {
+          alert("Please enter lat and lng.");
+          return;
+        }
+
+        const payload = {
+          business_type,
+          lat: parseFloat(latv),
+          lng: parseFloat(lngv),
+          radius,
+          top_n,
+        };
+
+        $("rawResponse").textContent = "Loading...";
+        renderVenues([]);
+
+        try {
+          const url = backend.replace(/\/+$/, "") + "/foot_traffic/closest";
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = (await (resp.headers.get("content-type") || "").includes(
+            "application/json"
+          ))
+            ? await resp.json()
+            : await resp.text();
+
+          if (!resp.ok) {
+            $("rawResponse").textContent = JSON.stringify(
+              { status: resp.status, error: data },
+              null,
+              2
+            );
+            return;
+          }
+
+          // show raw
+          $("rawResponse").textContent = JSON.stringify(data, null, 2);
+
+          // render top_venues if present
+          if (data && Array.isArray(data.top_venues)) {
+            renderVenues(data.top_venues);
+          } else {
+            renderVenues([]);
+          }
+        } catch (err) {
+          $("rawResponse").textContent = String(err);
+          console.error(err);
+        }
+      }
+
+      // geolocation helper
+      $("btnUseGeo").addEventListener("click", async () => {
+        if (!navigator.geolocation) {
+          alert("Geolocation not available");
+          return;
+        }
+        $("btnUseGeo").disabled = true;
+        $("btnUseGeo").textContent = "Getting location…";
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            $("lat").value = pos.coords.latitude.toFixed(6);
+            $("lng").value = pos.coords.longitude.toFixed(6);
+            $("btnUseGeo").disabled = false;
+            $("btnUseGeo").textContent = "Use current location";
+          },
+          (err) => {
+            alert("Unable to get location: " + err.message);
+            $("btnUseGeo").disabled = false;
+            $("btnUseGeo").textContent = "Use current location";
+          },
+          { enableHighAccuracy: false, timeout: 10000 }
+        );
+      });
+
+      $("btnFind").addEventListener("click", doFind);
+      $("btnClear").addEventListener("click", () => {
+        $("business_type").value = "";
+        $("lat").value = "";
+        $("lng").value = "";
+        $("rawResponse").textContent = "—";
+        $("venuesList").innerHTML = "— no results —";
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Maps • Population • Competitors</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #0f172a;
+        --card: #111827;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --border: #1f2937;
+        --accent: #60a5fa;
+        --accent-2: #22d3ee;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: Inter, system-ui, Arial;
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+      }
+      .outer {
+        display: grid;
+        grid-template-columns: 72px 1fr 420px;
+        height: 100vh;
+        gap: 12px;
+        padding: 12px;
+        box-sizing: border-box;
+      }
+      .rail {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+        padding-top: 12px;
+      }
+      .rail button {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .rail button.active {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        color: #07102a;
+      }
+      /* Widened leftPanel to 540px to avoid horizontal scrolling for the population visuals */
+      .leftPanel {
+        position: absolute;
+        left: 100px;
+        top: 12px;
+        width: 650px;
+        max-height: calc(100vh - 24px);
+        overflow: auto;
+        z-index: 1100;
+        display: none;
+      }
+      .leftPanel.open {
+        display: block;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 8px 20px rgba(2, 6, 23, 0.35);
+        color: var(--text);
+      }
+      #map {
+        width: 100%;
+        height: 100%;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(2, 6, 23, 0.25);
+        overflow: hidden;
+      }
+      .right {
+        overflow: auto;
+      }
+      .chat {
+        flex: 1;
+        overflow: auto;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        padding: 12px;
+        min-height: 200px;
+      }
+      .comp-list {
+        max-height: 360px;
+        overflow: auto;
+        margin-top: 8px;
+        display: grid;
+        gap: 8px;
+      }
+      .comp-item {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 8px;
+        border-radius: 8px;
+        background: #071227;
+        border: 1px solid var(--border);
+        cursor: pointer;
+      }
+      /* larger competitor image */
+      .comp-item img {
+        width: 120px;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 8px;
+        background: #081018;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        color: var(--text);
+        table-layout: fixed;
+      }
+      th,
+      td {
+        padding: 6px 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      th {
+        color: var(--muted);
+        text-transform: uppercase;
+        font-weight: 600;
+        font-size: 11px;
+      }
+      .btn {
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .btn.primary {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        color: #07102a;
+        border: none;
+      }
+      @media (max-width: 1100px) {
+        .outer {
+          grid-template-columns: 64px 1fr;
+        }
+        .leftPanel {
+          left: 80px;
+          width: 420px;
+        }
+        .right {
+          display: none;
+        }
+      }
+      #mapsErrorOverlay {
+        position: fixed;
+        left: 12px;
+        top: 12px;
+        z-index: 99999;
+        background: rgba(18, 22, 33, 0.98);
+        color: #fff;
+        border-radius: 8px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        display: none;
+        max-width: 540px;
+      }
+      .label {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .value {
+        font-size: 20px;
+        font-weight: 700;
+        margin-top: 6px;
+      }
+      .sub {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      /* Chart sizes tuned down a bit so both fit without vertical scroll on typical screens */
+      .chart-age {
+        height: 200px !important;
+      }
+      .chart-pie {
+        height: 200px !important;
+        width: 140px !important;
+      }
+      #tblBodyContainer {
+        max-height: 160px;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mapsErrorOverlay"></div>
+
+    <div class="outer">
+      <div class="rail">
+        <button id="btnPopulation" title="Population">P</button>
+        <button id="btnCompetitors" title="Competitors">C</button>
+        <button id="btnFoot" title="Foot traffic">F</button>
+      </div>
+
+      <div id="mapContainer" style="position: relative">
+        <div id="map"></div>
+      </div>
+
+      <!-- RIGHT chat -->
+      <section class="right">
+        <div class="card">
+          <div class="label" style="margin-bottom: 6px">
+            Text Generation (mock streaming)
+          </div>
+          <div
+            id="chat"
+            class="chat"
+            aria-live="polite"
+            aria-label="Conversation"
+          ></div>
+          <div class="compose" style="margin-top: 10px">
+            <div style="display: flex; gap: 8px">
+              <textarea
+                id="prompt"
+                placeholder="Add extra instructions… e.g., summarize key risks and recommendations"
+                style="
+                  flex: 1;
+                  min-height: 64px;
+                  border-radius: 8px;
+                  padding: 8px;
+                  background: #081225;
+                  border: 1px solid var(--border);
+                  color: var(--text);
+                "
+              ></textarea>
+              <button id="sendBtn" class="btn primary">Generate</button>
+            </div>
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                color: var(--muted);
+                font-size: 12px;
+                margin-top: 8px;
+              "
+            >
+              <span>Speed</span>
+              <input type="range" id="speed" min="10" max="120" value="40" />
+              <button class="btn" id="stopBtn" disabled>Stop</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- LEFT PANELS (hidden by default) -->
+    <div id="panelPopulation" class="leftPanel card" aria-hidden="true">
+      <div class="card" style="position: sticky; top: 76px">
+        <div class="label">Barangays</div>
+        <div
+          id="brgyList"
+          style="display: grid; gap: 8px; max-height: 240px; overflow: auto"
+        ></div>
+
+        <div
+          class="grid stats"
+          style="
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+          "
+        >
+          <div class="card">
+            <div class="label">Total Population</div>
+            <div class="value" id="statTotal">—</div>
+            <div class="sub">Aggregated from selected</div>
+          </div>
+          <div class="card">
+            <div class="label">Male</div>
+            <div class="value" id="statMale">—</div>
+            <div class="sub" id="statMalePct">—</div>
+          </div>
+          <div class="card">
+            <div class="label">Female</div>
+            <div class="value" id="statFemale">—</div>
+            <div class="sub" id="statFemalePct">—</div>
+          </div>
+        </div>
+
+        <div
+          class="charts"
+          style="
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+          "
+        >
+          <div class="card" style="flex: 1">
+            <div class="label" style="margin-bottom: 8px">
+              Age Groups by Sex
+            </div>
+            <div style="height: 200px">
+              <canvas id="barAge" class="chart-age"></canvas>
+            </div>
+          </div>
+          <div class="card" style="width: 160px; min-width: 160px">
+            <div class="label" style="margin-bottom: 8px">Gender Split</div>
+            <div
+              style="
+                height: 200px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <canvas id="pieGender" class="chart-pie"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 12px">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 8px;
+            "
+          >
+            <div class="label">Selected Barangays — Breakdown</div>
+            <div style="display: flex; gap: 8px">
+              <button class="btn" id="exportCsv">Export Selected CSV</button>
+              <button class="btn" id="exportCsvTotals">
+                Export Totals CSV
+              </button>
+            </div>
+          </div>
+          <div id="tblBodyContainer" style="overflow: auto; max-height: 160px">
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align: left">Barangay</th>
+                  <th>Total</th>
+                  <th>Male</th>
+                  <th>Female</th>
+                  <th>Children</th>
+                  <th>Teens</th>
+                  <th>Young Adults</th>
+                  <th>Adults</th>
+                  <th>Seniors</th>
+                </tr>
+              </thead>
+              <tbody id="tblBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 12px;
+          "
+        >
+          <button class="btn" id="btnPreview">Preview Input</button>
+          <button class="btn primary" id="btnAnalyze">
+            Analyze → Send to Chat
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="panelCompetitors" class="leftPanel card" aria-hidden="true">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <div style="font-weight: 700">Competitors</div>
+        <div style="color: var(--muted)" id="compCount">0</div>
+      </div>
+      <div class="comp-list" id="compList"></div>
+      <div style="margin-top: 8px">
+        <button id="btnCenterAll" class="btn" style="width: 100%">
+          Fit all on map
+        </button>
+      </div>
+    </div>
+
+    <div id="panelFoot" class="leftPanel card" aria-hidden="true">
+      <div style="font-weight: 700">Foot traffic (empty)</div>
+      <div style="color: var(--muted); margin-top: 8px">
+        Placeholder — no data yet.
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div
+      id="modalBackdrop"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.55);
+        align-items: center;
+        justify-content: center;
+        z-index: 1500;
+      "
+    >
+      <div
+        style="
+          width: 460px;
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 14px;
+        "
+      >
+        <h3 style="margin: 0 0 6px 0">Submit Business Location</h3>
+        <div id="selectedInfo" style="color: var(--muted); margin-bottom: 8px">
+          Select a location on the map.
+        </div>
+        <label>Latitude</label
+        ><input
+          id="lat"
+          readonly
+          style="
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            background: #081225;
+            border: 1px solid var(--border);
+            color: var(--text);
+          "
+        />
+        <label style="margin-top: 8px">Longitude</label
+        ><input
+          id="lng"
+          readonly
+          style="
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            background: #081225;
+            border: 1px solid var(--border);
+            color: var(--text);
+          "
+        />
+        <label style="margin-top: 8px">Business Type</label>
+        <select
+          id="businessType"
+          style="
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            background: #081225;
+            border: 1px solid var(--border);
+            color: var(--text);
+          "
+        >
+          <option value="">-- choose type --</option>
+          <option>restaurant</option>
+          <option>cafe</option>
+          <option>store</option>
+          <option>other</option>
+        </select>
+        <label style="margin-top: 8px">Description</label>
+        <textarea
+          id="description"
+          rows="3"
+          style="
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            background: #081225;
+            border: 1px solid var(--border);
+            color: var(--text);
+          "
+        ></textarea>
+
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 10px;
+          "
+        >
+          <button id="cancelBtn" class="btn">Cancel</button>
+          <button id="submitBtn" class="btn primary">Submit</button>
+        </div>
+        <div id="status" style="color: var(--muted); margin-top: 8px"></div>
+      </div>
+    </div>
+
+    <!-- Google Maps JS - replace the placeholder key with your real key -->
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA63takvoE_a_hMfpCP9wRbxVcEWaDqhXY&libraries=places,geometry&callback=initMap"
+      async
+      defer
+    ></script>
+
+    <script>
+      /***********************
+       * UI & panels
+       ***********************/
+      const btnP = document.getElementById("btnPopulation");
+      const btnC = document.getElementById("btnCompetitors");
+      const btnF = document.getElementById("btnFoot");
+      const panelP = document.getElementById("panelPopulation");
+      const panelC = document.getElementById("panelCompetitors");
+      const panelF = document.getElementById("panelFoot");
+
+      function showOverlayError(msg) {
+        const el = document.getElementById("mapsErrorOverlay");
+        el.style.display = "block";
+        el.innerHTML = `<strong>Google Maps:</strong><div style="margin-top:6px;color:#ddd">${msg}</div>`;
+      }
+      window.gm_authFailure = function () {
+        showOverlayError(
+          "Authentication/authorization failure — check API key, enabled APIs and billing."
+        );
+        console.error("gm_authFailure");
+      };
+
+      function hideAllPanels() {
+        btnP.classList.remove("active");
+        btnC.classList.remove("active");
+        btnF.classList.remove("active");
+        panelP.classList.remove("open");
+        panelP.style.display = "none";
+        panelP.setAttribute("aria-hidden", "true");
+        panelC.classList.remove("open");
+        panelC.style.display = "none";
+        panelC.setAttribute("aria-hidden", "true");
+        panelF.classList.remove("open");
+        panelF.style.display = "none";
+        panelF.setAttribute("aria-hidden", "true");
+      }
+      btnP.addEventListener("click", async () => {
+        hideAllPanels();
+        btnP.classList.add("active");
+        panelP.classList.add("open");
+        panelP.style.display = "block";
+        panelP.setAttribute("aria-hidden", "false");
+        await loadBarangaysIntoPanel();
+      });
+      btnC.addEventListener("click", () => {
+        hideAllPanels();
+        btnC.classList.add("active");
+        panelC.classList.add("open");
+        panelC.style.display = "block";
+        panelC.setAttribute("aria-hidden", "false");
+      });
+      btnF.addEventListener("click", () => {
+        hideAllPanels();
+        btnF.classList.add("active");
+        panelF.classList.add("open");
+        panelF.style.display = "block";
+        panelF.setAttribute("aria-hidden", "false");
+      });
+
+      // hidden by default
+      hideAllPanels();
+
+      /***********************
+       * Map & markers
+       ***********************/
+      let map,
+        targetMarker = null,
+        tempMarker = null,
+        infoWindow = null;
+      let competitorMarkers = [];
+      let targetLatLng = null;
+      let latestCompetitors = [];
+      let lastAddressComponents = {}; // kept for when user opens Population panel
+
+      function makeSvgIcon({
+        bg = "#fff",
+        fg = "#07102a",
+        label = "",
+        size = 36,
+        ring = false,
+        ringColor = "rgba(0,0,0,0.12)",
+        ringThickness = 3,
+        ringInnerColor = null,
+        ringDash = false,
+      } = {}) {
+        const r = Math.max(24, size);
+        const corner = Math.round(r * 0.18);
+        const fontSize = Math.round(r * 0.42);
+        const labelEsc = String(label || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        let dashAttr = ringDash
+          ? `stroke-dasharray="${Math.max(2, Math.round(r / 6))},${Math.max(
+              2,
+              Math.round(r / 8)
+            )}"`
+          : "";
+        let ringSvg = "";
+        if (ring) {
+          ringSvg += `<rect x="${ringThickness / 2}" y="${
+            ringThickness / 2
+          }" width="${r - ringThickness}" height="${
+            r - ringThickness
+          }" rx="${corner}" fill="none" stroke="${ringColor}" stroke-width="${ringThickness}" ${dashAttr} />`;
+          if (ringInnerColor) {
+            const innerInset = ringThickness + 2;
+            ringSvg += `<rect x="${innerInset}" y="${innerInset}" width="${
+              r - innerInset * 2
+            }" height="${r - innerInset * 2}" rx="${Math.round(
+              corner * 0.85
+            )}" fill="none" stroke="${ringInnerColor}" stroke-width="1.4" opacity="0.95"/>`;
+          }
+        }
+        const filterId = `f${Math.random().toString(36).slice(2, 8)}`;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${r}' height='${r}' viewBox='0 0 ${r} ${r}'><defs><filter id="${filterId}" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="2" stdDeviation="${Math.max(
+          1,
+          r / 24
+        )}" flood-color="#000" flood-opacity="0.32"/></filter></defs><g filter="url(#${filterId})"><rect x="0" y="0" width="${r}" height="${r}" rx="${corner}" fill="${bg}" />${ringSvg}<text x="50%" y="52%" font-family="Inter, Arial, sans-serif" font-size="${fontSize}" text-anchor="middle" fill="${fg}" dy=".35em" font-weight="700">${labelEsc}</text></g></svg>`;
+        return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+      }
+
+      function placeMarketMarker(latlng) {
+        if (targetMarker) targetMarker.setMap(null);
+        const icon = makeSvgIcon({
+          bg: "#60a5fa",
+          fg: "#07102a",
+          label: "M",
+          size: 52,
+          ring: true,
+          ringColor: "rgba(96,165,250,0.18)",
+          ringThickness: 4,
+          ringInnerColor: "rgba(34,211,238,0.12)",
+        });
+        targetMarker = new google.maps.Marker({
+          position: latlng,
+          map,
+          icon: {
+            url: icon,
+            scaledSize: new google.maps.Size(52, 52),
+            anchor: new google.maps.Point(26, 26),
+          },
+          zIndex: 999,
+          title: "Market",
+        });
+        targetMarker.addListener("click", () => {
+          if (infoWindow) infoWindow.close();
+          infoWindow = new google.maps.InfoWindow({
+            content: `<div style="font-weight:700">Market</div><div style="color:var(--muted)">${latlng.lat.toFixed(
+              6
+            )}, ${latlng.lng.toFixed(6)}</div>`,
+          });
+          infoWindow.open(map, targetMarker);
+        });
+      }
+
+      function extractLatLng(item) {
+        if (!item) return null;
+        if (item.geometry && item.geometry.location) {
+          const loc = item.geometry.location;
+          if (typeof loc.lat === "function" && typeof loc.lng === "function")
+            return { lat: loc.lat(), lng: loc.lng() };
+          if (loc.lat !== undefined && loc.lng !== undefined)
+            return { lat: Number(loc.lat), lng: Number(loc.lng) };
+        }
+        if (item.lat !== undefined && item.lng !== undefined)
+          return { lat: Number(item.lat), lng: Number(item.lng) };
+        if (item.latitude !== undefined && item.longitude !== undefined)
+          return { lat: Number(item.latitude), lng: Number(item.longitude) };
+        if (
+          item.location &&
+          item.location.lat !== undefined &&
+          item.location.lng !== undefined
+        )
+          return {
+            lat: Number(item.location.lat),
+            lng: Number(item.location.lng),
+          };
+        return null;
+      }
+
+      function getMapsApiKeyFromScript() {
+        try {
+          const scripts = Array.from(document.getElementsByTagName("script"));
+          for (const s of scripts) {
+            if (
+              s.src &&
+              s.src.indexOf("maps.googleapis.com/maps/api/js") !== -1
+            ) {
+              const url = new URL(s.src, location.href);
+              return url.searchParams.get("key") || null;
+            }
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      function buildPlacePhotoUrl(photo_reference, maxwidth = 400) {
+        const key = getMapsApiKeyFromScript();
+        if (!photo_reference || !key) return null;
+        return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxwidth}&photoreference=${encodeURIComponent(
+          photo_reference
+        )}&key=${encodeURIComponent(key)}`;
+      }
+
+      function getItemImageUrl(item) {
+        if (item.photos && item.photos.length) {
+          const pref =
+            item.photos[0].photo_reference ||
+            item.photos[0].photoReference ||
+            item.photos[0].photo_reference;
+          const url = buildPlacePhotoUrl(pref, 400);
+          if (url) return url;
+        }
+        if (item.photo_reference) {
+          const url = buildPlacePhotoUrl(item.photo_reference, 400);
+          if (url) return url;
+        }
+        if (
+          item.icon &&
+          typeof item.icon === "string" &&
+          item.icon.indexOf("http") === 0
+        )
+          return item.icon;
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'><rect width='100%' height='100%' fill='#0b1220'/><text x='50%' y='50%' fill='#8b9bb0' font-family='Inter,Arial' font-size='12' text-anchor='middle' dominant-baseline='middle'>No image</text></svg>`;
+        return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+      }
+
+      function addCompetitorMarkers(items) {
+        competitorMarkers.forEach((m) => m.setMap(null));
+        competitorMarkers = [];
+        if (!items || !items.length) return;
+        const bounds = new google.maps.LatLngBounds();
+        if (targetLatLng) bounds.extend(targetLatLng);
+        items.forEach((item, idx) => {
+          const pos = extractLatLng(item);
+          if (!pos) return;
+          bounds.extend(pos);
+          const labelText = String(idx + 1);
+          const icon = makeSvgIcon({
+            bg: "#ffffff",
+            fg: "#07102a",
+            label: labelText,
+            size: 42,
+            ring: true,
+            ringColor: "rgba(15,23,42,0.12)",
+            ringThickness: 3,
+            ringInnerColor: "rgba(99,102,241,0.06)",
+            ringDash: true,
+          });
+          const marker = new google.maps.Marker({
+            position: pos,
+            map,
+            icon: {
+              url: icon,
+              scaledSize: new google.maps.Size(42, 42),
+              anchor: new google.maps.Point(21, 21),
+            },
+            zIndex: 800 - idx,
+            title: item.name || `Competitor ${idx + 1}`,
+          });
+          marker.item = item;
+          marker.addListener("click", () => {
+            if (infoWindow) infoWindow.close();
+            const name = item.name || "Unknown";
+            const address = item.vicinity || item.formatted_address || "";
+            const rating = item.rating;
+            const reviews = item.user_ratings_total || 0;
+            const imgUrl = getItemImageUrl(item);
+            const photoHtml = imgUrl
+              ? `<div style="float:left;margin-right:8px;width:120px;height:90px;overflow:hidden;border-radius:8px;background:#111"><img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover" alt="${escapeHtml(
+                  name
+                )}"/></div>`
+              : "";
+            let ratingHtml = "";
+            if (rating !== undefined && rating !== null)
+              ratingHtml = `<div style="margin-top:6px;color:#fbbf24">${"★".repeat(
+                Math.floor(rating)
+              )} ${Number(rating).toFixed(1)} (${reviews})</div>`;
+            let distHtml = "";
+            if (targetLatLng) {
+              const p1 = new google.maps.LatLng(
+                targetLatLng.lat,
+                targetLatLng.lng
+              );
+              const p2 = new google.maps.LatLng(pos.lat, pos.lng);
+              const meters =
+                google.maps.geometry.spherical.computeDistanceBetween(p1, p2);
+              distHtml = `<div style="color:var(--muted)">${(
+                meters / 1000
+              ).toFixed(2)} km</div>`;
+            }
+            const html = `<div style="display:flex;min-width:280px">${photoHtml}<div style="flex:1"><div style="font-weight:700">${escapeHtml(
+              name
+            )}</div>${
+              address
+                ? `<div style="color:var(--muted)">${escapeHtml(address)}</div>`
+                : ""
+            }${ratingHtml}${distHtml}</div></div>`;
+            infoWindow = new google.maps.InfoWindow({ content: html });
+            infoWindow.open(map, marker);
+          });
+          competitorMarkers.push(marker);
+        });
+        try {
+          map.fitBounds(bounds, 80);
+        } catch (e) {
+          console.warn("fitBounds failed", e);
+        }
+      }
+
+      function escapeHtml(s) {
+        return String(s || "").replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[m])
+        );
+      }
+
+      /**************************
+       * initMap
+       **************************/
+      window._gmPlaceholderFired = false;
+      window.initMap = function () {
+        window._gmPlaceholderFired = true;
+      };
+      function realInitMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 14.5995, lng: 120.9842 },
+          zoom: 13,
+          streetViewControl: false,
+        });
+        map.addListener("click", (e) => {
+          const pos = e.latLng.toJSON();
+          if (tempMarker) tempMarker.setMap(null);
+          tempMarker = new google.maps.Marker({ position: pos, map });
+          document.getElementById("lat").value = pos.lat.toFixed(6);
+          document.getElementById("lng").value = pos.lng.toFixed(6);
+          document.getElementById(
+            "selectedInfo"
+          ).textContent = `Selected: ${pos.lat.toFixed(6)}, ${pos.lng.toFixed(
+            6
+          )}`;
+          document.getElementById("modalBackdrop").style.display = "flex";
+        });
+      }
+      const mapsReadyInterval = setInterval(() => {
+        if (window.google && google.maps && !map) {
+          clearInterval(mapsReadyInterval);
+          try {
+            realInitMap();
+          } catch (e) {
+            console.error(e);
+            showOverlayError("Map init error");
+          }
+        }
+      }, 100);
+      setTimeout(() => {
+        clearInterval(mapsReadyInterval);
+      }, 8000);
+
+      /**************************
+       * POST submit: DON'T send client-side address_components
+       * so the backend will call establishments1.get_address_components
+       **************************/
+      async function safePost(url, payload) {
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const text = await res.text();
+          if (!text) return { ok: false, status: res.status, text: "" };
+          try {
+            return { ok: res.ok, status: res.status, json: JSON.parse(text) };
+          } catch (e) {
+            return { ok: res.ok, status: res.status, text };
+          }
+        } catch (err) {
+          return { ok: false, error: err };
+        }
+      }
+
+      document.getElementById("cancelBtn").addEventListener("click", () => {
+        document.getElementById("modalBackdrop").style.display = "none";
+        if (tempMarker) {
+          tempMarker.setMap(null);
+          tempMarker = null;
+        }
+      });
+
+      document
+        .getElementById("submitBtn")
+        .addEventListener("click", async () => {
+          const lat = parseFloat(document.getElementById("lat").value);
+          const lng = parseFloat(document.getElementById("lng").value);
+          const business_type =
+            document.getElementById("businessType").value || "other";
+          const description =
+            document.getElementById("description").value || "";
+          if (!lat || !lng) {
+            document.getElementById("status").textContent =
+              "Please select a location.";
+            return;
+          }
+
+          targetLatLng = { lat, lng };
+          placeMarketMarker(targetLatLng);
+          document.getElementById("modalBackdrop").style.display = "none";
+
+          // IMPORTANT: send address_components as empty object so server uses establishments1.get_address_components
+          const payload = {
+            latitude: lat,
+            longitude: lng,
+            business_type,
+            description,
+            address_components: {},
+          };
+
+          const res = await safePost("/submit_establishment", payload);
+
+          if (res.json && res.json.ok) {
+            const data = res.json.data || {};
+            // capture address components returned by server to use when user opens Population panel
+            lastAddressComponents = data.address_components || {};
+            // competitors
+            latestCompetitors = data.competitors || [];
+            // sort by rating desc by default
+            latestCompetitors.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            populateCompetitorList(latestCompetitors);
+            addCompetitorMarkers(latestCompetitors);
+
+            // population stats aggregated by server (if provided)
+            if (data.population && Object.keys(data.population).length > 0) {
+              renderPopulationPanel(data.population);
+              // show population panel
+              hideAllPanels();
+              btnP.classList.add("active");
+              panelP.classList.add("open");
+              panelP.style.display = "block";
+              panelP.setAttribute("aria-hidden", "false");
+            } else {
+              // server didn't return population aggregation; user can open P to fetch barangays (server demographics endpoint will use server-side municipality)
+            }
+          } else {
+            document.getElementById("status").textContent = res.json
+              ? res.json.error || "Server error"
+              : res.error
+              ? res.error.message
+              : "Unknown error";
+            console.error("submit_establishment error", res);
+          }
+        });
+
+      /**************************
+       * Competitor list UI (sorted + rating)
+       **************************/
+      function populateCompetitorList(items) {
+        // already sorted server-side; ensure fallback sort
+        items = items.slice().sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        const list = document.getElementById("compList");
+        list.innerHTML = "";
+        items.forEach((it, idx) => {
+          const pos = extractLatLng(it);
+          const div = document.createElement("div");
+          div.className = "comp-item";
+          const img = document.createElement("img");
+          img.src = getItemImageUrl(it);
+          img.alt = "img";
+          const meta = document.createElement("div");
+          meta.style.flex = "1";
+          const ratingVal =
+            it.rating !== undefined && it.rating !== null
+              ? Number(it.rating).toFixed(1)
+              : null;
+          const ratingStars = ratingVal
+            ? "★".repeat(Math.floor(it.rating))
+            : "";
+          const ratingHtml = ratingVal
+            ? `<span style="color:#fbbf24;font-weight:700">${ratingStars}</span> <span style="color:var(--muted);margin-left:6px">${ratingVal}</span>`
+            : `<span style="color:var(--muted)">—</span>`;
+          meta.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between"><div style="font-weight:700">${escapeHtml(
+            it.name || "Competitor " + (idx + 1)
+          )}</div><div style="font-size:13px">${ratingHtml}</div></div><div style="color:var(--muted);font-size:13px">${escapeHtml(
+            it.vicinity || it.formatted_address || ""
+          )}</div>`;
+          div.appendChild(img);
+          div.appendChild(meta);
+          div.addEventListener("click", () => {
+            if (pos) {
+              map.panTo(pos);
+              map.setZoom(17);
+            }
+          });
+          list.appendChild(div);
+        });
+        document.getElementById("compCount").textContent = items.length;
+      }
+
+      document.getElementById("btnCenterAll").addEventListener("click", () => {
+        if (!latestCompetitors || !latestCompetitors.length) return;
+        const bounds = new google.maps.LatLngBounds();
+        if (targetLatLng) bounds.extend(targetLatLng);
+        latestCompetitors.forEach((it) => {
+          const p = extractLatLng(it);
+          if (p) bounds.extend(p);
+        });
+        map.fitBounds(bounds, 80);
+      });
+
+      /**************************
+       * Population: fetch barangays by municipality and render
+       * Note: server demographics endpoints accept ?municipality=... and merged_app will query DB.
+       **************************/
+      let MOCK = {
+        "Talon Dos": {
+          Barangay: "Talon Dos",
+          Total_MF: 27450,
+          Total_M: 13420,
+          Total_F: 14030,
+          Child_MF: 5300,
+          Teen_MF: 4900,
+          YoungAdult_MF: 6650,
+          Adult_MF: 8100,
+          Senior_MF: 2500,
+        },
+      };
+      let selectedBrgys = new Set(Object.keys(MOCK));
+
+      async function loadBarangaysIntoPanel() {
+        const brgyListEl = document.getElementById("brgyList");
+        if (brgyListEl.children.length) return;
+        // determine municipality source:
+        // prefer server-determined municipality (lastAddressComponents.municipality) returned from /submit_establishment
+        // else fallback to 'LAS PIÑAS'
+        const municipality =
+          lastAddressComponents && lastAddressComponents.municipality
+            ? lastAddressComponents.municipality
+            : "LAS PIÑAS";
+        try {
+          const q = `/demographics?municipality=${encodeURIComponent(
+            municipality
+          )}`;
+          const r = await fetch(q);
+          if (r.ok) {
+            const payload = await r.json();
+            const rows = payload.rows || payload || [];
+            if (Array.isArray(rows) && rows.length) {
+              brgyListEl.innerHTML = "";
+              rows.forEach((row) => {
+                const name =
+                  row.Barangay || row.barangay || row.name || row.BRGY || "";
+                if (!name) return;
+                const id = "cb-" + name.replace(/\W+/g, "-");
+                const label = document.createElement("label");
+                label.style.display = "flex";
+                label.style.gap = "8px";
+                label.style.alignItems = "center";
+                const input = document.createElement("input");
+                input.type = "checkbox";
+                input.id = id;
+                input.checked = true;
+                selectedBrgys.add(name);
+                input.addEventListener("change", () => {
+                  if (input.checked) selectedBrgys.add(name);
+                  else selectedBrgys.delete(name);
+                  updatePopulationFromRows(rows);
+                });
+                const span = document.createElement("span");
+                span.textContent = name;
+                label.appendChild(input);
+                label.appendChild(span);
+                brgyListEl.appendChild(label);
+              });
+              brgyListEl._rows = rows;
+              updatePopulationFromRows(rows);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn("demographics fetch failed", e);
+        }
+        // fallback to MOCK
+        brgyListEl.innerHTML = "";
+        Object.keys(MOCK).forEach((name) => {
+          const id = "cb-" + name.replace(/\W+/g, "-");
+          const label = document.createElement("label");
+          label.style.display = "flex";
+          label.style.gap = "8px";
+          label.style.alignItems = "center";
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.id = id;
+          input.checked = true;
+          selectedBrgys.add(name);
+          input.addEventListener("change", () => {
+            if (input.checked) selectedBrgys.add(name);
+            else selectedBrgys.delete(name);
+            updatePopulationFromMock();
+          });
+          const span = document.createElement("span");
+          span.textContent = name;
+          label.appendChild(input);
+          label.appendChild(span);
+          brgyListEl.appendChild(label);
+        });
+        brgyListEl._rows = null;
+        updatePopulationFromMock();
+      }
+
+      function updatePopulationFromRows(rows) {
+        const sel = Array.from(selectedBrgys);
+        const selectedRows = rows.filter((r) =>
+          sel.includes(r.Barangay || r.barangay || r.name || r.BRGY)
+        );
+        const agg = {
+          total: 0,
+          male: 0,
+          female: 0,
+          children: 0,
+          teens: 0,
+          young_adults: 0,
+          adults: 0,
+          seniors: 0,
+          rows: selectedRows.length,
+          rows_raw: selectedRows,
+        };
+        selectedRows.forEach((r) => {
+          const getnum = (o, ...k) => {
+            for (const key of k)
+              if (o[key] !== undefined && o[key] !== null)
+                return Number(o[key]) || 0;
+            return 0;
+          };
+          agg.total += getnum(r, "Total_MF", "Total", "total");
+          agg.male += getnum(r, "Total_M", "male");
+          agg.female += getnum(r, "Total_F", "female");
+          agg.children += getnum(r, "Child_MF", "children");
+          agg.teens += getnum(r, "Teen_MF", "teens");
+          agg.young_adults += getnum(r, "YoungAdult_MF", "young_adults");
+          agg.adults += getnum(r, "Adult_MF", "adults");
+          agg.seniors += getnum(r, "Senior_MF", "seniors");
+        });
+        renderPopulationPanel(agg);
+      }
+
+      function updatePopulationFromMock() {
+        const sel = Array.from(selectedBrgys);
+        let agg = {
+          total: 0,
+          male: 0,
+          female: 0,
+          children: 0,
+          teens: 0,
+          young_adults: 0,
+          adults: 0,
+          seniors: 0,
+          rows: sel.length,
+          rows_raw: [],
+        };
+        sel.forEach((name) => {
+          const d = MOCK[name];
+          if (!d) return;
+          agg.total += d.Total_MF || 0;
+          agg.male += d.Total_M || 0;
+          agg.female += d.Total_F || 0;
+          agg.children += d.Child_MF || 0;
+          agg.teens += d.Teen_MF || 0;
+          agg.young_adults += d.YoungAdult_MF || 0;
+          agg.adults += d.Adult_MF || 0;
+          agg.seniors += d.Senior_MF || 0;
+          agg.rows_raw.push(d);
+        });
+        renderPopulationPanel(agg);
+      }
+
+      function renderPopulationPanel(pop) {
+        if (panelP.style.display !== "block") {
+          hideAllPanels();
+          btnP.classList.add("active");
+          panelP.classList.add("open");
+          panelP.style.display = "block";
+          panelP.setAttribute("aria-hidden", "false");
+        }
+        document.getElementById("statTotal").textContent =
+          pop.total || 0 ? pop.total.toLocaleString() : "—";
+        document.getElementById("statMale").textContent =
+          pop.male || 0 ? pop.male.toLocaleString() : "—";
+        document.getElementById("statFemale").textContent =
+          pop.female || 0 ? pop.female.toLocaleString() : "—";
+        const malePct = pop.total
+          ? Math.round((pop.male / pop.total) * 100)
+          : 0;
+        const femalePct = pop.total
+          ? Math.round((pop.female / pop.total) * 100)
+          : 0;
+        document.getElementById("statMalePct").textContent = malePct
+          ? `${malePct}%`
+          : "—";
+        document.getElementById("statFemalePct").textContent = femalePct
+          ? `${femalePct}%`
+          : "—";
+
+        // bar chart
+        try {
+          const ctx = document.getElementById("barAge").getContext("2d");
+          if (window._barAgeChart) window._barAgeChart.destroy();
+          window._barAgeChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: ["Children", "Teens", "Young", "Adults", "Seniors"],
+              datasets: [
+                {
+                  label: "Count",
+                  data: [
+                    pop.children || 0,
+                    pop.teens || 0,
+                    pop.young_adults || 0,
+                    pop.adults || 0,
+                    pop.seniors || 0,
+                  ],
+                  backgroundColor: "#60a5fa",
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: { beginAtZero: true },
+              },
+            },
+          });
+        } catch (e) {
+          console.warn("bar chart", e);
+        }
+
+        // pie chart
+        try {
+          const ctx2 = document.getElementById("pieGender").getContext("2d");
+          if (window._pieGenderChart) window._pieGenderChart.destroy();
+          window._pieGenderChart = new Chart(ctx2, {
+            type: "doughnut",
+            data: {
+              labels: ["Male", "Female"],
+              datasets: [
+                {
+                  data: [pop.male || 0, pop.female || 0],
+                  backgroundColor: ["#60a5fa", "#22d3ee"],
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: "bottom", labels: { color: "#cbd5e1" } },
+              },
+            },
+          });
+        } catch (e) {
+          console.warn("pie chart", e);
+        }
+
+        // table
+        const tbody = document.getElementById("tblBody");
+        tbody.innerHTML = "";
+        const rows = pop.rows || pop.rows_raw || [];
+        if (Array.isArray(rows) && rows.length) {
+          rows.forEach((r) => {
+            const tr = document.createElement("tr");
+            const get = (o, ...k) => {
+              for (const key of k)
+                if (o[key] !== undefined && o[key] !== null) return o[key];
+              return "";
+            };
+            const totalRow = get(r, "Total_MF", "Total", "total") || "";
+            const maleRow = get(r, "Total_M", "male") || "";
+            const femaleRow = get(r, "Total_F", "female") || "";
+            const child = get(r, "Child_MF", "children") || "";
+            const teen = get(r, "Teen_MF", "teens") || "";
+            const young = get(r, "YoungAdult_MF", "young_adults") || "";
+            const adult = get(r, "Adult_MF", "adults") || "";
+            const senior = get(r, "Senior_MF", "seniors") || "";
+            tr.innerHTML = `<td style="text-align:left">${escapeHtml(
+              get(r, "Barangay", "barangay", "name") || ""
+            )}</td><td>${totalRow}</td><td>${maleRow}</td><td>${femaleRow}</td><td>${child}</td><td>${teen}</td><td>${young}</td><td>${adult}</td><td>${senior}</td>`;
+            tbody.appendChild(tr);
+          });
+        } else {
+          // fallback to selected mock
+          const keys = Array.from(selectedBrgys);
+          keys.forEach((k) => {
+            const d = MOCK[k];
+            if (!d) return;
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td style="text-align:left">${escapeHtml(
+              k
+            )}</td><td>${d.Total_MF}</td><td>${d.Total_M}</td><td>${
+              d.Total_F
+            }</td><td>${d.Child_MF}</td><td>${d.Teen_MF}</td><td>${
+              d.YoungAdult_MF
+            }</td><td>${d.Adult_MF}</td><td>${d.Senior_MF}</td>`;
+            tbody.appendChild(tr);
+          });
+        }
+      }
+
+      /**************************
+       * Utilities
+       **************************/
+      function escapeHtml(s) {
+        return String(s || "").replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[m])
+        );
+      }
+
+      console.log(
+        "Updated: panel widened, server geocode enforced, competitor images larger and sorted by rating."
+      );
+    </script>
+    <script>
+      // ------------------ small changes INSIDE your existing submit handler ------------------
+      // after you successfully get `data` from /submit_establishment, add:
+      window.lastSubmitted = {
+        business_type: business_type,
+        description: description,
+      };
+      // store other establishments list (if server returned it)
+      window.otherEstablishments =
+        data.other_establishments || data.otherEstablishments || [];
+
+      // ------------------ helper to build payload ------------------
+      function buildAnalysisPayload() {
+        // target location (from last selection)
+        const target = targetLatLng || null;
+
+        // business info
+        const biz = window.lastSubmitted || {
+          business_type: "",
+          description: "",
+        };
+
+        // population summary - try to reuse the aggregated stats shown in the panel
+        // we stored aggregated data inside renderPopulationPanel previously (pop) but not global;
+        // recreate from brgyList._rows and selectedBrgys if available
+        let population_summary = {};
+        try {
+          const brgyEl = document.getElementById("brgyList");
+          const rows = brgyEl && brgyEl._rows ? brgyEl._rows.slice() : null;
+          if (rows && rows.length) {
+            // compute same aggregation as server
+            const sel = Array.from(selectedBrgys);
+            const selectedRows = rows.filter((r) =>
+              sel.includes(r.Barangay || r.barangay || r.name || r.BRGY)
+            );
+            const agg = {
+              total: 0,
+              male: 0,
+              female: 0,
+              children: 0,
+              teens: 0,
+              young_adults: 0,
+              adults: 0,
+              seniors: 0,
+              rows: selectedRows.length,
+              rows_raw: selectedRows,
+            };
+            selectedRows.forEach((r) => {
+              const get = (o, ...keys) => {
+                for (const k of keys)
+                  if (o[k] !== undefined && o[k] !== null)
+                    return Number(o[k]) || 0;
+                return 0;
+              };
+              agg.total += get(r, "Total_MF", "Total", "total");
+              agg.male += get(r, "Total_M", "male");
+              agg.female += get(r, "Total_F", "female");
+              agg.children += get(r, "Child_MF", "children");
+              agg.teens += get(r, "Teen_MF", "teens");
+              agg.young_adults += get(r, "YoungAdult_MF", "young_adults");
+              agg.adults += get(r, "Adult_MF", "adults");
+              agg.seniors += get(r, "Senior_MF", "seniors");
+            });
+            population_summary = agg;
+          }
+        } catch (e) {
+          console.warn("buildAnalysisPayload population aggregation failed", e);
+        }
+
+        // competitors & other establishments (from last /submit_establishment response)
+        const comps = latestCompetitors || [];
+        const other_est = window.otherEstablishments || [];
+
+        return {
+          target_location: target,
+          business_type: biz.business_type || "",
+          description: biz.description || "",
+          population_summary: population_summary,
+          selected_barangays: Array.from(selectedBrgys || []),
+          competitors: comps,
+          other_establishments: other_est,
+        };
+      }
+
+      // ------------------ Analyze → Send to Chat button handler ------------------
+      document
+        .getElementById("btnAnalyze")
+        .addEventListener("click", async () => {
+          // Build and store payload for later Generate call
+          const payload = buildAnalysisPayload();
+          window.analysisPayload = payload;
+
+          // show compact preview in chat area (so user can tweak the extra prompt if desired)
+          const chat = document.getElementById("chat");
+          chat.innerHTML = ""; // clear previous
+          const header = document.createElement("div");
+          header.style.fontWeight = "700";
+          header.style.marginBottom = "8px";
+          header.textContent = "Prepared AI Input — review then click Generate";
+          chat.appendChild(header);
+
+          const pre = document.createElement("pre");
+          pre.style.whiteSpace = "pre-wrap";
+          pre.style.fontSize = "13px";
+          pre.style.color = "#dbeafe";
+          pre.textContent = JSON.stringify(
+            {
+              target_location: payload.target_location,
+              business_type: payload.business_type,
+              description: payload.description,
+              population_summary: {
+                total: payload.population_summary.total || null,
+                male: payload.population_summary.male || null,
+                female: payload.population_summary.female || null,
+              },
+              competitors_count: payload.competitors.length,
+              selected_barangays: payload.selected_barangays,
+            },
+            null,
+            2
+          );
+          chat.appendChild(pre);
+
+          // place a small note so the user knows next step
+          const note = document.createElement("div");
+          note.style.color = "#94a3b8";
+          note.style.marginTop = "8px";
+          note.textContent =
+            "You may add extra instructions in the right-hand text box. When ready, click Generate.";
+          chat.appendChild(note);
+        });
+
+      // ------------------ Generate (SendBtn) handler ------------------
+      document.getElementById("sendBtn").addEventListener("click", async () => {
+        const chat = document.getElementById("chat");
+        // require payload prepared
+        const payload = window.analysisPayload || buildAnalysisPayload();
+        if (!payload || !payload.target_location) {
+          chat.innerHTML =
+            '<div style="color:#f87171">No prepared payload found — click Analyze → Send to Chat first (or submit a market location).</div>';
+          return;
+        }
+        // attach any extra prompt from textarea
+        const extra = document.getElementById("prompt").value || "";
+        payload.extra_prompt = extra;
+
+        // show loading
+        const loading = document.createElement("div");
+        loading.textContent = "Generating analysis…";
+        loading.style.color = "#60a5fa";
+        chat.appendChild(loading);
+
+        try {
+          const res = await fetch("/generate_analysis", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const j = await res.json();
+          chat.removeChild(loading);
+          if (j && j.ok && j.analysis) {
+            const out = document.createElement("div");
+            out.style.whiteSpace = "pre-wrap";
+            out.style.fontSize = "14px";
+            out.style.marginTop = "6px";
+            out.innerHTML = j.analysis.replace(/\n/g, "<br>");
+            chat.appendChild(out);
+          } else {
+            const err = document.createElement("div");
+            err.style.color = "#f87171";
+            err.textContent = j.error || "Analysis failed";
+            chat.appendChild(err);
+          }
+        } catch (e) {
+          chat.removeChild(loading);
+          const err = document.createElement("div");
+          err.style.color = "#f87171";
+          err.textContent = `Request failed: ${e.message || e}`;
+          chat.appendChild(err);
+          console.error("generate_analysis request failed", e);
+        }
+      });
+    </script>
+  </body>
+</html>

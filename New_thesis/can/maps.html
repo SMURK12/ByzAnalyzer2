@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Business Marker — Map UI (Market + Competitors)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #0f172a;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --border: #1f2937;
+        --accent: #60a5fa;
+        --accent-2: #22d3ee;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: Inter, system-ui, Arial;
+        background: var(--bg);
+        color: var(--text);
+      }
+      #map {
+        height: 100vh;
+        width: 100%;
+      }
+      .hint {
+        position: fixed;
+        left: 12px;
+        top: 12px;
+        z-index: 900;
+        background: var(--panel);
+        color: var(--muted);
+        border-radius: 10px;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+      }
+      .legend {
+        position: fixed;
+        right: 12px;
+        top: 12px;
+        z-index: 900;
+        background: var(--panel);
+        color: var(--muted);
+        border-radius: 10px;
+        padding: 10px;
+        border: 1px solid var(--border);
+        min-width: 160px;
+      }
+      .legend .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .legend .icon {
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+        border-radius: 4px;
+      }
+      .legend .market {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      }
+      .legend .competitor {
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      }
+      .legend .toggle {
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      .modal-backdrop.open {
+        display: flex;
+      }
+      .modal {
+        width: 420px;
+        max-width: 92%;
+        background: var(--panel);
+        border-radius: 12px;
+        padding: 18px;
+        border: 1px solid var(--border);
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #0b1222;
+        color: var(--text);
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 12px;
+      }
+      .btn {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn.primary {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        color: #07102a;
+      }
+      .btn.ghost {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .status {
+        margin-top: 8px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <div class="legend" id="legend">
+      <div class="row">
+        <div class="icon market"></div>
+        <div style="font-size: 13px">Market (target)</div>
+      </div>
+      <div class="row">
+        <div class="icon competitor"></div>
+        <div style="font-size: 13px">Competitors</div>
+      </div>
+      <div class="toggle">
+        <input type="checkbox" id="toggleCompetitors" checked />
+        <label
+          for="toggleCompetitors"
+          style="font-size: 13px; color: var(--muted)"
+          >Show competitors</label
+        >
+      </div>
+    </div>
+
+    <!-- Modal popup -->
+    <div
+      id="modalBackdrop"
+      class="modal-backdrop"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div class="modal" role="document" aria-modal="true">
+        <h3 style="margin: 0 0 8px 0">Submit Business Location</h3>
+        <div
+          style="color: var(--muted); font-size: 13px; margin-bottom: 10px"
+          id="selectedInfo"
+        >
+          Select a location on the map.
+        </div>
+
+        <div>
+          <label for="lat">Latitude</label>
+          <input id="lat" type="text" readonly />
+
+          <label for="lng" style="margin-top: 8px">Longitude</label>
+          <input id="lng" type="text" readonly />
+
+          <label for="businessType" style="margin-top: 8px"
+            >Business Type</label
+          >
+          <select id="businessType">
+            <option value="">-- choose type --</option>
+            <option>restaurant</option>
+            <option>cafe</option>
+            <option>bar</option>
+            <option>bakery</option>
+            <option>convenience_store</option>
+            <option>pharmacy</option>
+            <option>supermarket</option>
+            <option>store</option>
+            <option>other</option>
+          </select>
+
+          <label for="description" style="margin-top: 8px"
+            >Description (optional)</label
+          >
+          <textarea id="description" placeholder="Details..."></textarea>
+
+          <div class="actions">
+            <button id="cancelBtn" class="btn ghost">Cancel</button>
+            <button id="submitBtn" class="btn primary">Submit</button>
+          </div>
+
+          <div class="status" id="status"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Backend base if needed else empty for same origin
+      const BACKEND_BASE = "";
+
+      const modal = document.getElementById("modalBackdrop");
+      const selectedInfo = document.getElementById("selectedInfo");
+      const latInput = document.getElementById("lat");
+      const lngInput = document.getElementById("lng");
+      const submitBtn = document.getElementById("submitBtn");
+      const cancelBtn = document.getElementById("cancelBtn");
+      const statusEl = document.getElementById("status");
+      const toggleCompetitors = document.getElementById("toggleCompetitors");
+
+      let map,
+        targetMarker = null;
+      let competitorMarkers = [];
+      let infoWindow;
+      let targetLatLng = null;
+
+      function openModal() {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+        document.getElementById("businessType").focus();
+      }
+      function closeModal() {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+        statusEl.textContent = "";
+      }
+
+      cancelBtn.addEventListener("click", closeModal);
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      /**
+       * makeSvgIcon({
+       *   bg, fg, label, size,
+       *   ring, ringColor, ringThickness, ringInnerColor, ringDash
+       * })
+       *
+       * Creates a data-uri SVG square marker with decorative outer lining (ring).
+       */
+      function makeSvgIcon({
+        bg = "#ffffff",
+        fg = "#07102a",
+        label = "",
+        size = 36,
+        ring = false,
+        ringColor = "rgba(0,0,0,0.12)",
+        ringThickness = 3,
+        ringInnerColor = null,
+        ringDash = false,
+      } = {}) {
+        const r = Math.max(24, size);
+        const corner = Math.round(r * 0.18);
+        const fontSize = Math.round(r * 0.42);
+        const labelEsc = String(label)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+        // outer ring (rounded rect stroke). dashed optional
+        let dashAttr = ringDash
+          ? `stroke-dasharray="${Math.max(2, Math.round(r / 6))},${Math.max(
+              2,
+              Math.round(r / 8)
+            )}"`
+          : "";
+        let ringSvg = "";
+        if (ring) {
+          ringSvg += `
+            <rect x="${ringThickness / 2}" y="${ringThickness / 2}"
+                  width="${r - ringThickness}" height="${
+            r - ringThickness
+          }" rx="${corner}"
+                  fill="none" stroke="${ringColor}" stroke-width="${ringThickness}" ${dashAttr} />
+          `;
+          if (ringInnerColor) {
+            const innerInset = ringThickness + 2;
+            ringSvg += `
+              <rect x="${innerInset}" y="${innerInset}"
+                    width="${r - innerInset * 2}" height="${
+              r - innerInset * 2
+            }" rx="${Math.round(corner * 0.85)}"
+                    fill="none" stroke="${ringInnerColor}" stroke-width="1.4" opacity="0.95"/>
+            `;
+          }
+        }
+
+        const filterId = `f${Math.random().toString(36).slice(2, 8)}`;
+        const svg = `
+          <svg xmlns='http://www.w3.org/2000/svg' width='${r}' height='${r}' viewBox='0 0 ${r} ${r}'>
+            <defs>
+              <filter id="${filterId}" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="2" stdDeviation="${Math.max(
+                  1,
+                  r / 24
+                )}" flood-color="#000" flood-opacity="0.32"/>
+              </filter>
+            </defs>
+            <g filter="url(#${filterId})">
+              <rect x="0" y="0" width="${r}" height="${r}" rx="${corner}" fill="${bg}" />
+              ${ringSvg}
+              <text x="50%" y="52%" font-family="Inter, Arial, sans-serif" font-size="${fontSize}" text-anchor="middle" fill="${fg}" dy=".35em" font-weight="700">${labelEsc}</text>
+            </g>
+          </svg>
+        `.trim();
+
+        return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+      }
+
+      // Convert server competitor item to a LatLng if possible
+      function extractLatLng(item) {
+        if (!item) return null;
+        if (item.geometry) {
+          const loc = item.geometry.location;
+          if (typeof loc.lat === "function" && typeof loc.lng === "function") {
+            return { lat: loc.lat(), lng: loc.lng() };
+          }
+          if (loc.lat !== undefined && loc.lng !== undefined)
+            return { lat: Number(loc.lat), lng: Number(loc.lng) };
+          if (loc.latitude !== undefined && loc.longitude !== undefined)
+            return { lat: Number(loc.latitude), lng: Number(loc.longitude) };
+        }
+        if (item.lat !== undefined && item.lng !== undefined)
+          return { lat: Number(item.lat), lng: Number(item.lng) };
+        if (item.latitude !== undefined && item.longitude !== undefined)
+          return { lat: Number(item.latitude), lng: Number(item.longitude) };
+        if (
+          item.location &&
+          item.location.lat !== undefined &&
+          item.location.lng !== undefined
+        )
+          return {
+            lat: Number(item.location.lat),
+            lng: Number(item.location.lng),
+          };
+        return null;
+      }
+
+      function clearCompetitorMarkers() {
+        competitorMarkers.forEach((m) => m.setMap(null));
+        competitorMarkers = [];
+      }
+
+      // place "Market" target marker (special icon) - now with decorative ring
+      function placeMarketMarker(latlng) {
+        if (targetMarker) targetMarker.setMap(null);
+
+        const marketIconUrl = makeSvgIcon({
+          bg: "#60a5fa",
+          fg: "#07102a",
+          label: "M",
+          size: 52,
+          ring: true,
+          ringColor: "rgba(96,165,250,0.18)",
+          ringThickness: 4,
+          ringInnerColor: "rgba(34,211,238,0.12)",
+          ringDash: false,
+        });
+
+        targetMarker = new google.maps.Marker({
+          position: latlng,
+          map,
+          title: "Market (target location)",
+          icon: {
+            url: marketIconUrl,
+            scaledSize: new google.maps.Size(52, 52),
+            anchor: new google.maps.Point(26, 26),
+          },
+          zIndex: 999,
+        });
+
+        google.maps.event.addListener(targetMarker, "click", () => {
+          if (infoWindow) infoWindow.close();
+          infoWindow = new google.maps.InfoWindow({
+            content: `<div style="font-weight:600">Market</div><div style="font-size:13px;color:#94a3b8">${latlng.lat.toFixed(
+              6
+            )}, ${latlng.lng.toFixed(6)}</div>`,
+          });
+          infoWindow.open(map, targetMarker);
+        });
+      }
+
+      // Add professional competitor markers (with decorative outer lining) and fit bounds
+      function addCompetitorMarkers(items) {
+        clearCompetitorMarkers();
+        if (!items || !items.length) return;
+
+        const bounds = new google.maps.LatLngBounds();
+        if (targetLatLng) bounds.extend(targetLatLng);
+
+        const photoKeyAvailable = !!getMapsApiKeyFromScript();
+
+        items.forEach((item, idx) => {
+          const pos = extractLatLng(item);
+          if (!pos) return;
+
+          bounds.extend(pos);
+
+          const labelText = (idx + 1).toString();
+          const competitorIconUrl = makeSvgIcon({
+            bg: "#ffffff",
+            fg: "#07102a",
+            label: labelText,
+            size: 42,
+            ring: true,
+            ringColor: "rgba(15,23,42,0.12)",
+            ringThickness: 3,
+            ringInnerColor: "rgba(99,102,241,0.06)",
+            ringDash: true,
+          });
+
+          const marker = new google.maps.Marker({
+            position: pos,
+            map,
+            title: item.name || item.title || `Competitor ${idx + 1}`,
+            icon: {
+              url: competitorIconUrl,
+              scaledSize: new google.maps.Size(42, 42),
+              anchor: new google.maps.Point(21, 21),
+            },
+            zIndex: 800 - idx,
+          });
+
+          const name = item.name || "Unknown";
+          const address =
+            item.vicinity || item.formatted_address || item.address || "";
+          const type =
+            (item.all_types && item.all_types[0]) ||
+            (item.types && item.types[0]) ||
+            "";
+          const rating = item.rating;
+          const reviews = item.user_ratings_total || item.user_ratings || 0;
+          const photoRef = item.photo_reference || null;
+
+          // build rating stars (simple)
+          let ratingHtml = "";
+          if (rating !== undefined && rating !== null) {
+            const r = Number(rating);
+            const fullStars = Math.floor(r);
+            const half = r - fullStars >= 0.5;
+            let stars = "★".repeat(fullStars);
+            if (half) stars += "½";
+            ratingHtml = `<div style="margin-top:6px;font-size:14px;color:#fbbf24">${stars} <span style="color:#94a3b8;font-weight:600"> ${r.toFixed(
+              1
+            )}</span> <span style="color:#94a3b8">(${reviews})</span></div>`;
+          }
+
+          let photoHtml = "";
+          if (photoRef && photoKeyAvailable) {
+            const photoUrl = buildPlacePhotoUrl(photoRef, 300);
+            photoHtml = `<div style="float:left;margin-right:8px;width:96px;height:72px;overflow:hidden;border-radius:8px;background:#111"><img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover" alt="${escapeHtml(
+              name
+            )}"/></div>`;
+          } else if (item.icon) {
+            photoHtml = `<div style="float:left;margin-right:8px;width:72px;height:72px;overflow:hidden;border-radius:8px;background:#111"><img src="${escapeHtml(
+              item.icon
+            )}" style="width:100%;height:100%;object-fit:cover" alt="${escapeHtml(
+              name
+            )}"/></div>`;
+          }
+
+          marker.addListener("click", () => {
+            if (infoWindow) infoWindow.close();
+
+            let distanceText = "";
+            if (targetLatLng) {
+              const p1 = new google.maps.LatLng(
+                targetLatLng.lat,
+                targetLatLng.lng
+              );
+              const p2 = new google.maps.LatLng(pos.lat, pos.lng);
+              const meters =
+                google.maps.geometry.spherical.computeDistanceBetween(p1, p2);
+              distanceText = `<div style="font-size:13px;color:#94a3b8;margin-top:6px">Distance: ${(
+                meters / 1000
+              ).toFixed(2)} km (${Math.round(meters)} m)</div>`;
+            }
+
+            const html = `
+              <div style="display:flex;min-width:260px">
+                ${photoHtml}
+                <div style="flex:1; padding:4px 0">
+                  <div style="font-weight:700">${escapeHtml(name)}</div>
+                  ${
+                    address
+                      ? `<div style="font-size:13px;color:#94a3b8">${escapeHtml(
+                          address
+                        )}</div>`
+                      : ""
+                  }
+                  ${
+                    type
+                      ? `<div style="font-size:13px;color:#94a3b8">Type: ${escapeHtml(
+                          type
+                        )}</div>`
+                      : ""
+                  }
+                  ${ratingHtml}
+                  ${distanceText}
+                </div>
+              </div>
+            `;
+            infoWindow = new google.maps.InfoWindow({ content: html });
+            infoWindow.open(map, marker);
+          });
+
+          competitorMarkers.push(marker);
+        });
+
+        // fit the map to show market + competitors
+        map.fitBounds(bounds, 80);
+      }
+
+      // simple HTML escape
+      function escapeHtml(s) {
+        return String(s || "").replace(/[&<>"']/g, function (m) {
+          return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          }[m];
+        });
+      }
+
+      // safe POST that reads text first (avoid JSON parse errors)
+      async function safePost(url, payload) {
+        statusEl.textContent = "Sending...";
+        try {
+          const res = await fetch(BACKEND_BASE + url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const text = await res.text();
+          if (!text) return { ok: false, status: res.status, text: "" };
+          try {
+            return { ok: res.ok, status: res.status, json: JSON.parse(text) };
+          } catch (e) {
+            return { ok: res.ok, status: res.status, text };
+          }
+        } catch (err) {
+          return { ok: false, error: err };
+        }
+      }
+
+      // submit handler: places market marker and requests competitors
+      submitBtn.addEventListener("click", async () => {
+        const lat = parseFloat(latInput.value);
+        const lng = parseFloat(lngInput.value);
+        const business_type =
+          document.getElementById("businessType").value || "other";
+        const description = document.getElementById("description").value || "";
+
+        if (!lat || !lng) {
+          statusEl.textContent = "Please select a location first.";
+          return;
+        }
+
+        targetLatLng = { lat, lng };
+        placeMarketMarker(targetLatLng); // show market immediately so user sees it
+
+        const payload = {
+          latitude: lat,
+          longitude: lng,
+          business_type,
+          description,
+        };
+        console.log("Posting payload", payload);
+
+        const r = await safePost("/submit_establishment", payload);
+
+        if (r.json) {
+          if (r.json.ok) {
+            const data = r.json.data || {};
+            const comps = data.competitors || [];
+            const addr = data.address_components || {};
+            statusEl.textContent = `Received ${comps.length} competitors • ${
+              addr.municipality || ""
+            } ${addr.province || ""}`;
+            console.log("Competitors raw", comps);
+            console.log("Address components", addr);
+
+            // add markers
+            addCompetitorMarkers(comps);
+
+            // show a summary info window on the market marker
+            if (targetMarker) {
+              if (infoWindow) infoWindow.close();
+              let summary = `<div style="min-width:200px"><div style="font-weight:700">Market</div>`;
+              if (addr.municipality || addr.province)
+                summary += `<div style="font-size:13px;color:#94a3b8">${escapeHtml(
+                  addr.barangay || ""
+                )} ${escapeHtml(addr.municipality || "")}, ${escapeHtml(
+                  addr.province || ""
+                )}</div>`;
+              summary += `<div style="font-size:13px;color:#94a3b8;margin-top:6px">${comps.length} competitor(s) found</div></div>`;
+              infoWindow = new google.maps.InfoWindow({ content: summary });
+              infoWindow.open(map, targetMarker);
+            }
+          } else {
+            statusEl.textContent = `Server error: ${r.json.error || "unknown"}`;
+            console.error(r.json);
+          }
+        } else if (r.text) {
+          statusEl.textContent = "Server response: " + r.text;
+          console.warn("Non-JSON response:", r.text);
+        } else if (r.error) {
+          statusEl.textContent = "Network error: " + r.error.message;
+        } else {
+          statusEl.textContent = `Unexpected response (HTTP ${r.status})`;
+        }
+      });
+
+      // toggle show/hide competitor markers
+      toggleCompetitors.addEventListener("change", () => {
+        const show = toggleCompetitors.checked;
+        competitorMarkers.forEach((m) => m.setMap(show ? map : null));
+      });
+
+      // click on map -> open modal & place temporary marker (market yet to be confirmed on submit)
+      let tempMarker = null;
+      function initMap() {
+        const defaultCenter = { lat: 14.5995, lng: 120.9842 };
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: defaultCenter,
+          zoom: 13,
+        });
+
+        map.addListener("click", (e) => {
+          const pos = e.latLng.toJSON();
+          if (tempMarker) tempMarker.setMap(null);
+          tempMarker = new google.maps.Marker({
+            position: pos,
+            map,
+            title: "Selected",
+          });
+          latInput.value = pos.lat.toFixed(6);
+          lngInput.value = pos.lng.toFixed(6);
+          selectedInfo.textContent = `Selected: ${latInput.value}, ${lngInput.value}`;
+          openModal();
+        });
+      }
+
+      // Extract Maps API key from script tag if present (used to build photo URLs)
+      function getMapsApiKeyFromScript() {
+        try {
+          const scripts = Array.from(document.getElementsByTagName("script"));
+          for (const s of scripts) {
+            if (
+              s.src &&
+              s.src.indexOf("maps.googleapis.com/maps/api/js") !== -1
+            ) {
+              try {
+                const url = new URL(s.src, window.location.href);
+                return url.searchParams.get("key") || null;
+              } catch (e) {}
+            }
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      function buildPlacePhotoUrl(photo_reference, maxwidth = 400) {
+        const key = getMapsApiKeyFromScript();
+        if (!photo_reference || !key) return null;
+        return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxwidth}&photoreference=${encodeURIComponent(
+          photo_reference
+        )}&key=${encodeURIComponent(key)}`;
+      }
+
+      window.initMap = initMap;
+    </script>
+
+    <!-- Note: include 'geometry' lib for distance computation -->
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA63takvoE_a_hMfpCP9wRbxVcEWaDqhXY&libraries=places,geometry&callback=initMap"
+      async
+      defer
+    ></script>
+  </body>
+</html>
