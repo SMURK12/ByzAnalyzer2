@@ -1053,7 +1053,6 @@ def text_to_speech():
     Returns: audio/mpeg file stream
     """
     
-    
     data = request.get_json(silent=True) or {}
     text = data.get('text', '')
     
@@ -1080,6 +1079,7 @@ def text_to_speech():
         return jsonify({"ok": False, "error": "OpenAI TTS API key not configured"}), 500
     
     try:
+        # Initialize OpenAI client - simple, no extra parameters
         client = OpenAI(api_key=tts_key)
         
         # Create a temporary file to store the audio
@@ -1088,10 +1088,9 @@ def text_to_speech():
             
             # Stream the TTS response to the temp file
             with client.audio.speech.with_streaming_response.create(
-                model="gpt-4o-mini-tts",
-                voice="coral",
-                input=text,
-                instructions="Speak in an advisable, professional tone suitable for business analysis.",
+                model="tts-1",
+                voice="nova",
+                input=text
             ) as response:
                 response.stream_to_file(tmp_path)
             
@@ -1371,3 +1370,4 @@ if __name__ == '__main__':
     port = int(os.getenv("PORT", "5000"))
     logger.info("Starting merged Flask app on %s:%d", host, port)
     app.run(host=host, port=port, debug=True)
+
